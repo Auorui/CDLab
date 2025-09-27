@@ -1,4 +1,4 @@
-# FourierDehazeNet (Under Consideration)
+# FourierDehazeNet
 
 Official PyTorch implementation of the paper:  
 **"FourierDehazeNet: Fourier-Domain Band Decomposition with Multi-Scale Feature Fusion for Remote Sensing Image Dehazing"**
