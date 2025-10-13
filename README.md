@@ -12,3 +12,10 @@ We provide comprehensive training logs for the StateHaze1K dataset's three subse
 - `./logs/thick.log` - Training metrics for thick haze conditions
 
 > *Note: Logs from other experimental runs were unfortunately purged during system maintenance before we could archive them systematically. The provided logs represent the complete and reproducible training processes for our main results.*
+
+
+## Acknowledgment
+
+This repository is heavily based upon [MixDehazeNet](https://github.com/AmeryXiong/MixDehazeNet) and [Dehazeformer](https://github.com/IDKiro/DehazeFormer).
+
+This work was supported by the Key Research and Development Program of Heilongjiang Province.
