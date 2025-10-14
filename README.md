@@ -5,6 +5,8 @@ This repository is the official pytorch implementation site for "FourierDehazeNe
 ## RSHD
 ![rshd](./assets/3.png)
 
+A sample of images from a portion of the RSHD dataset, covering airplanes, oil storage tanks, and ships. The first row shows haze-free images, the second row shows images with 1–2 layers of haze synthesized via AC-PHS by adding αn to the image, with αn randomly sampled in (0.75, 1.05), and the third row shows images with 2–3 layers of haze synthesized via AC-PHS by adding αn to the image, with αn randomly sampled in (0.85, 1.25) to simulate thicker and more non-uniform haze.For specific methods, please refer to **./utils/cloudmistfusion.py**
+
 > **Academic Notice**: This paper is currently under consideration at a peer-reviewed conference/journal. To maintain the integrity of the review process, we are providing the model architecture and training code at this stage. The complete dataset and pre-trained weights will be released upon formal acceptance.
 
 **Training Logs Availability**:  
