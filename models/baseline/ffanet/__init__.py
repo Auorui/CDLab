@@ -1,1 +1,0 @@
-from .ffanet import FFANet

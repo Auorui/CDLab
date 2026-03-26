@@ -1,1 +1,0 @@
-from .gunet import gunet_s, gunet_b, gunet_d, gunet_t
