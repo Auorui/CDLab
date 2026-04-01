@@ -1,0 +1,25 @@
+# config/SNUNet.yaml
+data_config: '__base__/CLCD.yaml'
+
+model:
+  name: 'SNUNet'
+  params:
+    in_ch: 3
+    num_classes: 2
+
+optimizer_type: 'adamw'
+lr: 0.0001
+momentum: 0.9
+weight_decay: 0.0001
+scheduler_type: 'gradual_warm'
+warmup_epochs: 5
+
+loss_type: ['dice', 'focal']
+loss_weight: [0.5, 0.5]
+
+epochs: 200
+batch_size: 2
+
+log_dir: './logs'
+save_period: 50
+resume_training: null      # 这里是完整的模型检查点路径（包含记忆项）

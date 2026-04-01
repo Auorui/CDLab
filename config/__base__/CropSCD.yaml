@@ -1,0 +1,18 @@
+data:
+  dataset_path: 'data\CropSCD'
+  target_shape: 512
+  num_classes: 9
+  dir_n1: 'im1'
+  dir_n2: 'im2'
+  color_map: null
+#            {
+#      0: [255, 255, 255],       # No Cropland Change
+#      1: [0, 0, 255],           # Water
+#      2: [0, 100, 0],           # Forest
+#      3: [0, 128, 0],           # Plantation
+#      4: [0, 255, 0],           # Grassland
+#      5: [128, 0, 0],           # Impervious surface
+#      6: [0, 255, 255],         # Road
+#      7: [255, 0, 0],           # Greenhouse
+#      8: [255, 192, 0],         # Bare soil
+#}
