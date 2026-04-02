@@ -1,3 +1,7 @@
+# 🔥 Change Detection Laboratory (CDLab) 
+
+> A unified and extensible PyTorch framework for **remote sensing change detection**, supporting multiple architectures, flexible configurations, and reproducible experiments.
+
 ## ⚡ Quick Start
 
 Before training or inference, please first check the detailed instructions:
