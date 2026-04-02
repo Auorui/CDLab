@@ -8,9 +8,10 @@ Before training or inference, please first check the detailed instructions:
 
 📚 **Documentation**
 
-* 📂 Dataset configuration → `./docx/data_config_instruction.md`
-* 🧩 Model registration → `./docx/new_model_register.md`
-* ⚙️ Model configuration → `./docx/model_config_instruction.md`
+* 📂 Dataset configuration → [data_config_instruction.md](./docx/data_config_instruction.md)
+* 🧩 Model registration → [new_model_register.md](./docx/new_model_register.md)
+* ⚙️ Model configuration → [model_config_instruction.md](./docx/model_config_instruction.md)
+
 
 ---
 
