@@ -37,50 +37,15 @@ Example:
 
 ```bash
 ./logs/2026_04_02_09_32_57/
-├── STNet.yaml                # ✅ merged full config (reproducibility)
+├── STNet.yaml                # ✅ merged full config (reproducibility, includes: dataset settings、model parameters、training hyperparameters)
 ├── weights/                  # model checkpoints
 │   ├── best_metric_model.pth # ⭐ best model (recommended)
 │   └── last.pth              # last checkpoint
 ├── loss/                     # training loss
-│   ├── epoch_loss.txt
-│   └── epoch_loss.png
-└── out.log                   # training logs
+│   ├── epoch_loss.txt        # loss per epoch
+│   └── epoch_loss.png        # loss curve visualization
+└── out.log                   # training logs (includes progress, metrics, and warnings)
 ```
-
----
-
-## 🔍 Output Explanation
-
-### 📄 `STNet.yaml`
-
-* Fully merged configuration file
-* Includes:
-
-  * dataset settings
-  * model parameters
-  * training hyperparameters
-    👉 Used directly for **inference and reproducibility**
-
----
-
-### 🧠 `weights/`
-
-* `best_metric_model.pth` → best model based on evaluation metric (**recommended**)
-* `last.pth` → final checkpoint
-
----
-
-### 📉 `loss/`
-
-* `epoch_loss.txt` → loss per epoch
-* `epoch_loss.png` → loss curve visualization
-
----
-
-### 📝 `out.log`
-
-* Full training logs
-* Includes progress, metrics, and warnings
 
 ---
 
