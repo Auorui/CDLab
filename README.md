@@ -1,62 +1,18 @@
-# 🔥 Change Detection Laboratory (CDLab)
-
-> A unified and extensible PyTorch framework for **remote sensing change detection**, supporting multiple architectures, flexible configurations, and reproducible experiments.
-
----
-
-## 🚀 Highlights
-
-* ✅ **Modular design**: decoupled model / dataset / loss / config
-* ✅ **YAML-driven experiments**: easy to reproduce and extend
-* ✅ **Multi-model support**: plug-and-play architecture registry
-* ✅ **Binary & multi-class change detection**
-* ✅ **Flexible loss combinations** (CE, Dice, Focal, IoU)
-* ✅ **TorchMetrics-based evaluation**
-* ✅ **Supports multi-GPU training**
-
----
-
-## 📁 Project Structure
-
-```
-CDLab/
-├── config/                # Experiment configurations (YAML)
-│   ├── __base__/          # Base dataset configs
-│   └── STNet.yaml
-├── models/                # Model definitions
-│   ├── baseline/
-│   └── network.py         # Model registry
-├── utils/
-│   ├── losses.py
-│   ├── dataset.py
-│   ├── trainer.py
-│   └── config.py
-├── train.py               # Training entry
-├── infer.py               # Inference script
-└── README.md
-```
-
----
-
 ## ⚡ Quick Start
 
-### 1. Prepare config file
+Before training or inference, please first check the detailed instructions:
 
-Example: `config/STNet.yaml`
+📚 **Documentation**
 
-```yaml
-data_config: '__base__/CLCD.yaml'
-
-model:
-  name: 'STNet'
-  params:
-    backbone: 'resnet18'
-    num_classes: 2
-```
+* 📂 Dataset configuration → `./docx/data_config_instruction.md`
+* 🧩 Model registration → `./docx/new_model_register.md`
+* ⚙️ Model configuration → `./docx/model_config_instruction.md`
 
 ---
 
-### 2. Train
+## 🚀 Training
+
+Once the configuration is ready, start training with:
 
 ```bash
 python train.py --config ./config/STNet.yaml --gpu_ids 0
@@ -64,206 +20,148 @@ python train.py --config ./config/STNet.yaml --gpu_ids 0
 
 ---
 
-### 3. Inference
+## 📌 Output Structure
+
+All experiment outputs are automatically organized under:
 
 ```bash
-python infer.py \
-  --test_config ./weights/STNet/STNet.yaml \
-  --weight_path ./weights/STNet/best_model.pth \
-  --output_dir ./results
+./logs/{experiment_name}/
 ```
-
----
-
-## ⚙️ Configuration System
-
-CDLab uses a **hierarchical YAML configuration system**.
-
-### 🔹 Main Config
-
-```yaml
-model:
-  name: 'STNet'
-  params:
-    backbone: 'resnet18'
-    num_classes: 2
-
-optimizer_type: 'adamw'
-lr: 1e-4
-
-loss_type: ['dice', 'focal']
-loss_weight: [0.5, 0.5]
-```
-
----
-
-### 🔹 Dataset Config
-
-```yaml
-data:
-  dataset_path: 'data/CLCD'
-  target_shape: 512
-  num_classes: 2
-  dir_n1: 'image1'
-  dir_n2: 'image2'
-
-  color_map:
-    NotChanged: [0, 0, 0]
-    Changed: [255, 255, 255]
-```
-
----
-
-### ✅ Features
-
-* Automatic **config inheritance**
-* Consistency check:
-
-  * `data.num_classes == model.num_classes`
-* Automatic config saving for reproducibility
-
----
-
-## 🧠 Supported Models
-
-| Model        | Description              |
-| ------------ | ------------------------ |
-| STNet        | Spatio-temporal modeling |
-| SNUNet       | Siamese nested U-Net     |
-| ChangeFormer | Transformer-based CD     |
-| DCSI-UNet    | CNN-based CD             |
-| MeGNet       | Memory-guided network    |
-| MSCANet      | Multi-scale attention    |
-
-👉 Easily extend via:
-
-```python
-MODEL_CLASSES = {
-    "YourModel": YourModel
-}
-```
-
----
-
-## 📊 Loss Functions
-
-CDLab supports flexible combinations:
-
-* Cross Entropy
-* Dice Loss
-* Focal Loss
-* IoU (Jaccard Loss)
 
 Example:
 
-```yaml
-loss_type: ['dice', 'focal']
-loss_weight: [0.5, 0.5]
+```bash
+./logs/2026_04_02_09_32_57/
+├── STNet.yaml                # ✅ merged full config (reproducibility)
+├── weights/                  # model checkpoints
+│   ├── best_metric_model.pth # ⭐ best model (recommended)
+│   └── last.pth              # last checkpoint
+├── loss/                     # training loss
+│   ├── epoch_loss.txt
+│   └── epoch_loss.png
+└── out.log                   # training logs
 ```
 
 ---
 
-## 📈 Evaluation Metrics
+## 🔍 Output Explanation
 
-Based on **TorchMetrics**:
+### 📄 `STNet.yaml`
 
-* Accuracy
-* Precision
-* Recall
-* F1 Score
-* IoU
+* Fully merged configuration file
+* Includes:
 
----
-
-## 📦 Dataset Format
-
-### Binary Change Detection
-
-```
-dataset/
-├── train/
-│   ├── image1/
-│   ├── image2/
-│   └── label/
-├── val/
-└── test/
-```
+  * dataset settings
+  * model parameters
+  * training hyperparameters
+    👉 Used directly for **inference and reproducibility**
 
 ---
 
-### Multi-class Change Detection
+### 🧠 `weights/`
 
-Supports semantic change detection with customizable `color_map`.
-
----
-
-## 🧪 Training Pipeline
-
-* Automatic logging
-* Learning rate scheduling (warmup supported)
-* Multi-output loss support
-* Best model saving based on F1-score
+* `best_metric_model.pth` → best model based on evaluation metric (**recommended**)
+* `last.pth` → final checkpoint
 
 ---
 
-## 🎯 Inference & Visualization
+### 📉 `loss/`
 
-* Binary mask output
-* Confusion map visualization:
-
-  * TP: White
-  * FP: Red
-  * FN: Green
+* `epoch_loss.txt` → loss per epoch
+* `epoch_loss.png` → loss curve visualization
 
 ---
 
-## 🔧 Customization
+### 📝 `out.log`
 
-### Add a new model
+* Full training logs
+* Includes progress, metrics, and warnings
 
-```python
-from models.network import MODEL_CLASSES
+---
 
-MODEL_CLASSES["NewModel"] = NewModel
+## 🔍 Inference (Prediction)
+
+Run inference using:
+
+```bash
+python predict.py \
+  --test_config ./logs/xxx/STNet.yaml \
+  --weight_path ./logs/xxx/weights/best_metric_model.pth \
+  --output_dir ./work_dirs
 ```
 
 ---
 
-### Add a new dataset
+## ⚠️ Important Design
 
-Implement:
+During training, CDL ab automatically saves a **fully merged configuration file**:
 
-```python
-class YourDataset(BaseDataset):
-    ...
+```bash
+./logs/{experiment}/STNet.yaml
+```
+
+👉 This file already contains:
+
+* dataset configuration (`data_config`)
+* model parameters
+* training settings
+
+---
+
+## ✅ Why This Matters
+
+You **DO NOT need to reconfigure anything during inference**.
+
+Simply provide:
+
+```bash
+config + weight
+```
+
+Everything else is restored automatically.
+
+---
+
+## 💡 Recommended Practice
+
+Always use:
+
+```bash
+best_metric_model.pth
+```
+
+instead of `last.pth` for inference.
+
+---
+
+## 🚀 Workflow Summary
+
+```text
+1. Read docs → understand config
+2. Modify config/STNet.yaml
+3. Train model
+4. Use logs/xxx/STNet.yaml + best_metric_model.pth
+5. Run predict.py
 ```
 
 ---
 
-## 📌 TODO
+## 🎯 Design Philosophy
 
-* [ ] Add more SOTA models
-* [ ] Support distributed training (DDP)
-* [ ] Add visualization dashboard
-* [ ] Benchmark on public datasets
+CDLab follows a **self-contained experiment design**:
 
----
-
-## 🤝 Acknowledgement
-
-This project is built upon:
-
-* PyTorch
-* TorchMetrics
-* Custom utility library `pyzjr`
+* Each experiment folder = **fully reproducible unit**
+* No need to reconfigure dataset or model
+* Training and inference are fully decoupled
 
 ---
 
+## ✨ Key Advantages
 
----
-
-## 📬 Contact
-
-Feel free to open issues or contact for collaboration.
+* 🔥 No configuration mismatch during inference
+* 🔥 Fully reproducible experiments
+* 🔥 One-command prediction
+* 🔥 Clean and structured logging system
+* 🔥 Easy debugging and visualization
 
 ---
