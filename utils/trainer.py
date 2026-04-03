@@ -49,11 +49,7 @@ class CDTrainEpoch(object):
             else:
                 prob = out
 
-            # 处理多输出模型
-            if isinstance(prob, (list, tuple)):
-                loss = sum([self.criterion(o, label) for o in prob])
-            else:
-                loss = self.criterion(prob, label)
+            loss = self.criterion(prob, label)
 
             loss.backward()
             self.optimizer.step()
@@ -143,6 +139,7 @@ class CDTrainEpoch(object):
         print(f"IoU      : {val_iou:.4f}\n")
 
         return val_losses.avg, val_f1
+
 
 
 # 使用SegmentationIndex（仅作报留）
