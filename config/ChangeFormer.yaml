@@ -18,6 +18,7 @@ warmup_epochs: 5
 
 loss_type: ['ce', ]
 loss_weight: [1.0, ]
+aux_loss_weights: null
 
 epochs: 200
 batch_size: 2

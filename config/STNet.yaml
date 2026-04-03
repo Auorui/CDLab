@@ -20,6 +20,7 @@ warmup_epochs: 5
 
 loss_type: ['dice', 'focal']
 loss_weight: [0.5, 0.5]
+aux_loss_weights: null
 
 epochs: 200
 batch_size: 2

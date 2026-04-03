@@ -10,6 +10,7 @@ model:
     backbone_pretrained: true            # 是否加载主干网络预训练权重
     backbone_pretrained_path: ''         # 主干网络权重路径（空则自动下载）
 
+
 optimizer_type: 'adamw'
 lr: 0.0001
 momentum: 0.9
@@ -19,6 +20,7 @@ warmup_epochs: 5
 
 loss_type: ['ce', ]
 loss_weight: [1.0, ]
+aux_loss_weights: null
 
 epochs: 200
 batch_size: 2
