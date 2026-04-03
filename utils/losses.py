@@ -237,7 +237,7 @@ class JaccardLoss(nn.Module):
         return loss
 
 class CombinedLoss(nn.Module):
-    def __init__(self, loss_type=None, loss_weight=None,
+    def __init__(self, loss_type=None, loss_weight=None, aux_loss_weights=None,
                  num_classes=2, smooth=1e-5, focal_alpha=0.25, focal_gamma=2.0,
                  ignore_index=256, reduction='mean'):
         super(CombinedLoss, self).__init__()
@@ -248,6 +248,7 @@ class CombinedLoss(nn.Module):
         self.loss_type = loss_type
         self.loss_weight = loss_weight
         self.reduction = reduction
+        self.aux_loss_weights = aux_loss_weights
 
         assert len(self.loss_type) == len(self.loss_weight), \
             "The lengths of loss_type and loss_weight must be consistent."
@@ -263,7 +264,7 @@ class CombinedLoss(nn.Module):
                                ignore_index=ignore_index, reduction=reduction)
         })
 
-    def forward(self, input, target):
+    def _compute_single_loss(self, input, target):
         total_loss = 0.0
 
         for loss_name, weight in zip(self.loss_type, self.loss_weight):
@@ -273,5 +274,20 @@ class CombinedLoss(nn.Module):
 
         return total_loss
 
-
-
+    def forward(self, input, target):
+        """
+        Args:
+            input: 可以是单个tensor (B, C, H, W) 或多个tensor的列表/元组
+            target: (B, H, W) or (B, 1, H, W) labels
+        Returns:
+            loss: scalar
+        """
+        if isinstance(input, (list, tuple)):
+            losses = [self._compute_single_loss(inp, target) for inp in input]
+            if self.aux_loss_weights and len(self.aux_loss_weights) == len(losses):
+                total_loss = sum(w * l for w, l in zip(self.aux_loss_weights, losses))
+            else:
+                total_loss = sum(losses)
+            return total_loss
+        else:
+            return self._compute_single_loss(input, target)
