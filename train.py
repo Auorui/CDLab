@@ -1,5 +1,4 @@
 import os
-import torch.nn as nn
 import torch.utils.data
 import argparse
 from models.network import get_change_networks
@@ -73,7 +72,8 @@ if __name__=="__main__":
         optimizer, scheduler_type='gradual_warm', init_lr=config.lr,
         warmup_epochs=config.warmup_epochs, total_epochs=config.epochs)
     # criterion = nn.CrossEntropyLoss().to(device)
-    criterion = CombinedLoss(config.loss_type, config.loss_weight, num_classes=config.data.num_classes).to(device)
+    criterion = CombinedLoss(config.loss_type, config.loss_weight, aux_loss_weights=config.aux_loss_weights,
+                             num_classes=config.data.num_classes).to(device)
     cd_trainer = CDTrainEpoch(
         network, model_cfg.name, config.epochs, optimizer, criterion, num_classes=config.data.num_classes
     )
@@ -96,6 +96,4 @@ if __name__=="__main__":
             total_epochs=config.epochs,
             save_period=config.save_period
         )
-
-
 
