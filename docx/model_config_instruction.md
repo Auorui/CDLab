@@ -22,6 +22,7 @@ model:
     transform_feat: 128
     layer_num: 4
     pretrained: true
+  aux_loss_weights: null
 
 optimizer_type: 'adamw'
 lr: 0.0001
