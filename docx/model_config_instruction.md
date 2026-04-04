@@ -139,6 +139,7 @@ pyzjr.nn.optim.get_lr_scheduler
 ```yaml id="9r5r4f"
 loss_type: ['dice', 'focal']
 loss_weight: [0.5, 0.5]
+aux_loss_weights: null
 ```
 
 📌 Supported loss functions are defined in:
