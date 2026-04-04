@@ -7,7 +7,8 @@ MODEL_CLASSES = {
     "FC_SiamUnet_diff" : SiamUnet_diff,
     "SNUNet"           : SNUNet_ECAM,
     "ChangeFormer"     : ChangeFormerV6,
-    "DCSI_UNet"        : DCSI_UNet
+    "DCSI_UNet"        : DCSI_UNet,
+    "LENet"            : LENet,
 }
 
 def get_change_networks(name, **kwargs):
