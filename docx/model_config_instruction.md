@@ -22,7 +22,6 @@ model:
     transform_feat: 128
     layer_num: 4
     pretrained: true
-  aux_loss_weights: null
 
 optimizer_type: 'adamw'
 lr: 0.0001
@@ -34,6 +33,7 @@ warmup_epochs: 5
 
 loss_type: ['dice', 'focal']
 loss_weight: [0.5, 0.5]
+aux_loss_weights: null
 
 epochs: 200
 batch_size: 2
