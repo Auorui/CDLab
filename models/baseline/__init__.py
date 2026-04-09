@@ -6,3 +6,4 @@ from .snunet import SNUNet_ECAM
 from .changeformer import ChangeFormerV6
 from .dcsi_unet import DCSI_UNet
 from .lenet import LENet
+from .isdanet import ISDANet
