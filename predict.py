@@ -39,9 +39,6 @@ class CDInference(object):
         self.target_shape = self.data_config.target_shape if hasattr(self.data_config, 'target_shape') else (512, 512)
         self.color_map = self.data_config.color_map if hasattr(self.data_config, 'color_map') else None
 
-        if args.dataset_path:
-            self.data_config.dataset_path = args.dataset_path
-
         # 保存位置
         self.output_dir = os.path.join(args.output_dir, self.config.model.name, pyzjr.timestr())
         self.vis_dir = os.path.join(self.output_dir, 'visualizations')
@@ -229,12 +226,11 @@ class CDInference(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Change Detection with YAML Config Test')
-    parser.add_argument('--test_config', type=str, default=r'E:\PythonProject\CDLab\weights\CropSCD\MeGNet\MeGNet.yaml',
+    parser.add_argument('--test_config', type=str, default=r'E:\PythonProject\CDLab\weights\LEVIR_CD\BIT\BIT.yaml',
                         help='path to config file')
-    parser.add_argument('--weight_path', default=r'E:\PythonProject\CDLab\weights\CropSCD\MeGNet\best_metric_model.pth', type=str,
+    parser.add_argument('--weight_path', default=r'E:\PythonProject\CDLab\weights\LEVIR_CD\BIT\model_weights_only.pth', type=str,
                         help='path to models saving')
     parser.add_argument("--output_dir", type=str, default=r'./work_dirs')
-    parser.add_argument("--dataset_path", type=str, default=None)
     parser.add_argument("--device", type=str, default='cuda:0')
     parser.add_argument("--threshold", type=float, default=0.5)
     parser.add_argument("--only_index", type=bool, default=True)
