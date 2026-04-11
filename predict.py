@@ -228,7 +228,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Change Detection with YAML Config Test')
     parser.add_argument('--test_config', type=str, default=r'E:\PythonProject\CDLab\weights\LEVIR_CD\BIT\BIT.yaml',
                         help='path to config file')
-    parser.add_argument('--weight_path', default=r'E:\PythonProject\CDLab\weights\LEVIR_CD\BIT\model_weights_only.pth', type=str,
+    parser.add_argument('--weight_path', default=r'E:\PythonProject\CDLab\weights\LEVIR_CD\BIT\best_metric_model.pth', type=str,
                         help='path to models saving')
     parser.add_argument("--output_dir", type=str, default=r'./work_dirs')
     parser.add_argument("--device", type=str, default='cuda:0')
