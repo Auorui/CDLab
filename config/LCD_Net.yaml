@@ -1,0 +1,26 @@
+# config/LCD_Net.yaml
+data_config: '__base__/LEVIR_CD.yaml'
+
+model:
+  name: 'LCD_Net'
+  params:
+    num_classes: 2
+    pretrained: true
+
+optimizer_type: 'adamw'        # adam, adamw, sgd
+lr: 0.0001
+momentum: 0.9
+weight_decay: 0.0001
+scheduler_type: 'gradual_warm'
+warmup_epochs: 5
+
+loss_type: ['ce', 'dice']
+loss_weight: [1.0, 1.0]
+aux_loss_weights: [1.0, 1.0]
+
+epochs: 200
+batch_size: 2
+
+log_dir: './logs'
+save_period: 50           # 每多少epoch保存一次模型
+resume_training: null     # 恢复训练的checkpoint路径，如 './checkpoints/last.pth'
