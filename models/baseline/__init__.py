@@ -7,3 +7,10 @@ from .changeformer import ChangeFormerV6
 from .dcsi_unet import DCSI_UNet
 from .lenet import LENet
 from .isdanet import ISDANet
+from .ussfcnet import USSFCNet
+from .lcdnet import LCD_Net
+from .bit import BIT
+from .hatnet import HATNet
+from .dpccnet import DPCCNet
+from .csdnet import CSDNet
+from .wdmfnet import WDMFNet
