@@ -47,6 +47,18 @@ Example:
 └── out.log                   # training logs (includes progress, metrics, and warnings)
 ```
 
+During training, CDLab automatically saves a **fully merged configuration file**:
+
+```bash
+./logs/{timestamp}/STNet.yaml
+```
+
+👉 This file already contains:
+
+* dataset configuration (`data_config`)
+* model parameters
+* training settings
+
 ---
 
 ## 🔍 Inference (Prediction)
@@ -60,47 +72,11 @@ python predict.py \
   --output_dir ./work_dirs
 ```
 
----
-
-## ⚠️ Important Design
-
-During training, CDL ab automatically saves a **fully merged configuration file**:
-
-```bash
-./logs/{experiment}/STNet.yaml
-```
-
-👉 This file already contains:
-
-* dataset configuration (`data_config`)
-* model parameters
-* training settings
-
----
-
-## ✅ Why This Matters
-
 You **DO NOT need to reconfigure anything during inference**.
 
-Simply provide:
+Simply provide: config + weight. Everything else is restored automatically.
 
-```bash
-config + weight
-```
-
-Everything else is restored automatically.
-
----
-
-## 💡 Recommended Practice
-
-Always use:
-
-```bash
-best_metric_model.pth
-```
-
-instead of `last.pth` for inference.
+Always use best_metric_model.pth instead of last.pth for inference.
 
 ---
 
@@ -123,15 +99,5 @@ CDLab follows a **self-contained experiment design**:
 * Each experiment folder = **fully reproducible unit**
 * No need to reconfigure dataset or model
 * Training and inference are fully decoupled
-
----
-
-## ✨ Key Advantages
-
-* 🔥 No configuration mismatch during inference
-* 🔥 Fully reproducible experiments
-* 🔥 One-command prediction
-* 🔥 Clean and structured logging system
-* 🔥 Easy debugging and visualization
 
 ---
