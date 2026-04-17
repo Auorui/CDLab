@@ -236,13 +236,77 @@ class JaccardLoss(nn.Module):
 
         return loss
 
+class TanimotoLoss(nn.Module):
+    def __init__(self, num_classes=2, smooth=1e-5, ignore_index=256, reduction='mean'):
+        super(TanimotoLoss, self).__init__()
+        self.num_classes = num_classes
+        self.smooth = smooth
+        self.ignore_index = ignore_index
+        self.reduction = reduction
+
+    def forward(self, input, target):
+        """
+        input: (B, C, H, W) logits
+        target: (B, H, W) or (B, 1, H, W)
+        """
+        if target.dim() == 4:
+            target = torch.squeeze(target, dim=1)
+        target = target.long()
+
+        if input.shape[-2:] != target.shape[-2:]:
+            input = F.interpolate(input, size=target.shape[-2:], mode='bilinear', align_corners=True)
+
+        prob = F.softmax(input, dim=1)
+
+        # mask
+        if self.ignore_index is not None:
+            valid_mask = (target != self.ignore_index)
+        else:
+            valid_mask = torch.ones_like(target, dtype=torch.bool)
+
+        target_safe = target.clone()
+        target_safe[~valid_mask] = 0
+
+        target_one_hot = F.one_hot(target_safe, num_classes=self.num_classes)\
+                            .permute(0, 3, 1, 2).float()
+
+        mask = valid_mask.unsqueeze(1).float()
+
+        prob = prob * mask
+        target_one_hot = target_one_hot * mask
+
+        # ===== Tanimoto =====
+        intersection = (prob * target_one_hot).sum(dim=[2, 3])
+        p2 = (prob * prob).sum(dim=[2, 3])
+        t2 = (target_one_hot * target_one_hot).sum(dim=[2, 3])
+
+        tanimoto = (intersection + self.smooth) / (p2 + t2 - intersection + self.smooth)
+
+        intersection_c = ((1 - prob) * (1 - target_one_hot)).sum(dim=[2, 3])
+        p2_c = ((1 - prob) ** 2).sum(dim=[2, 3])
+        t2_c = ((1 - target_one_hot) ** 2).sum(dim=[2, 3])
+
+        tanimoto_c = (intersection_c + self.smooth) / (p2_c + t2_c - intersection_c + self.smooth)
+
+        tanimoto_final = 0.5 * (tanimoto + tanimoto_c)
+
+        loss = 1 - tanimoto_final
+        # 类别平均
+        loss = loss.mean(dim=1)
+        if self.reduction == 'mean':
+            loss = loss.mean()
+        elif self.reduction == 'sum':
+            loss = loss.sum()
+
+        return loss
+
 class CombinedLoss(nn.Module):
     def __init__(self, loss_type=None, loss_weight=None, aux_loss_weights=None,
                  num_classes=2, smooth=1e-5, focal_alpha=0.25, focal_gamma=2.0,
                  ignore_index=256, reduction='mean'):
         super(CombinedLoss, self).__init__()
         if loss_type is None:
-            loss_type = ['ce', 'dice', 'focal', 'iou']
+            loss_type = ['ce', 'dice', 'focal', 'iou', 'tanimoto']
         if loss_weight is None:
             loss_weight = [1.0, 0.5, 0.5, 0.5]
         self.loss_type = loss_type
@@ -261,7 +325,9 @@ class CombinedLoss(nn.Module):
                                gamma=focal_gamma, reduction=reduction,
                                ignore_index=ignore_index),
             'iou': JaccardLoss(num_classes=num_classes, smooth=smooth,
-                               ignore_index=ignore_index, reduction=reduction)
+                               ignore_index=ignore_index, reduction=reduction),
+            'tanimoto': TanimotoLoss(num_classes=num_classes, smooth=smooth,
+                               ignore_index=ignore_index, reduction=reduction),
         })
 
     def _compute_single_loss(self, input, target):
