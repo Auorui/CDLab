@@ -8,9 +8,11 @@ Before training or inference, please first check the detailed instructions:
 
 📚 **Documentation**
 
-* 📂 Dataset configuration → [guide1](./docx/data_config_instruction.md)
-* 🧩 Model registration → [guide2](./docx/new_model_register.md)
-* ⚙️ Model configuration → [guide3](./docx/model_config_instruction.md)
+| Guide | Description | Link |
+|-------|-------------|------|
+| 📂 Dataset configuration | Configure dataset paths | [guide1](./docx/data_config_instruction.md) |
+| 🧩 Model registration | Register new models into the framework | [guide2](./docx/new_model_register.md) |
+| ⚙️ Model configuration | Set model parameters and architecture details | [guide3](./docx/model_config_instruction.md) |
 
 
 ---
