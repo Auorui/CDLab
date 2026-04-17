@@ -96,6 +96,3 @@ if __name__=="__main__":
             total_epochs=config.epochs,
             save_period=config.save_period
         )
-
-
-
