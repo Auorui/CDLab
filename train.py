@@ -50,10 +50,19 @@ if __name__=="__main__":
             checkpoint = torch.load(config.resume_training, map_location=device, weights_only=True)
         else:
             checkpoint = torch.load(config.resume_training, map_location='cpu', weights_only=True)
-        if isinstance(network, torch.nn.DataParallel):
-            network.module.load_state_dict(checkpoint)
-        else:
-            network.load_state_dict(checkpoint)
+        target_model = network.module if isinstance(network, torch.nn.DataParallel) else network
+        model_dict = target_model.state_dict()
+        filtered, skipped = {}, []
+        for k, v in checkpoint.items():
+            if k in model_dict and v.shape == model_dict[k].shape:
+                filtered[k] = v
+            else:
+                skipped.append(k)
+        model_dict.update(filtered)
+        target_model.load_state_dict(model_dict)
+        print(f"Loaded: {len(filtered)} / {len(checkpoint)} layers")
+        if skipped:
+            print(f"  Skipped (shape mismatch or not found): {skipped}")
     else:
         print(f"Initial training {model_cfg.name}")
 
