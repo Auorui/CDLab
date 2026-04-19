@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.baseline.wdmfnet.backbone import mobilenet_v2
 from einops import rearrange
 import numbers
 from pytorch_wavelets import DWTForward, DWTInverse
-
+from models.baseline.wdmfnet.backbone import mobilenet_v2
 
 # -------------------------------------------------------HFEA----------------------------------------------------------#
 class EncoderFusion(nn.Module):
@@ -486,13 +485,13 @@ class MSA_Module(nn.Module):
 
 # -----------------------------------------------------WDMFNet---------------------------------------------------------#
 class WDMFNet(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes=2, pretrained=True):
         super(WDMFNet, self).__init__()
-        self.encoder = mobilenet_v2.mobilenet_v2(pretrained=True)
+        self.encoder = mobilenet_v2(pretrained=pretrained)
         self.encoder_fusion = EncoderFusion(inc=[16, 24, 32, 96, 320], midc=32, outc=64)
         self.diff = DiffModule(64)
         self.decoder_fusion = DecoderFusion(64)
-        self.decoder_out = nn.Conv2d(64, 1, kernel_size=1)
+        self.decoder_out = nn.Conv2d(64, num_classes, kernel_size=1)
 
     def forward(self, x1, x2):
         # feature extraction
@@ -514,19 +513,30 @@ class WDMFNet(nn.Module):
 
         # change map
         f1 = self.decoder_out(f1)
-        f1_up = F.interpolate(f1, scale_factor=(4, 4), mode='bilinear')
-        f1_up = torch.sigmoid(f1_up)
-
         f2 = self.decoder_out(f2)
-        f2_up = F.interpolate(f2, scale_factor=(8, 8), mode='bilinear')
-        f2_up = torch.sigmoid(f2_up)
-
         f3 = self.decoder_out(f3)
-        f3_up = F.interpolate(f3, scale_factor=(16, 16), mode='bilinear')
-        f3_up = torch.sigmoid(f3_up)
-
         f4 = self.decoder_out(f4)
-        f4_up = F.interpolate(f4, scale_factor=(32, 32), mode='bilinear')
-        f4_up = torch.sigmoid(f4_up)
 
+        f1_up = F.interpolate(f1, scale_factor=(4, 4), mode='bilinear')
+        # f1_up = torch.sigmoid(f1_up)
+        f2_up = F.interpolate(f2, scale_factor=(8, 8), mode='bilinear')
+        # f2_up = torch.sigmoid(f2_up)
+        f3_up = F.interpolate(f3, scale_factor=(16, 16), mode='bilinear')
+        # f3_up = torch.sigmoid(f3_up)
+        f4_up = F.interpolate(f4, scale_factor=(32, 32), mode='bilinear')
+        # f4_up = torch.sigmoid(f4_up)
         return f1_up, f2_up, f3_up, f4_up
+
+
+
+if __name__ == '__main__':
+    model = WDMFNet()
+    img = torch.randn(1, 3, 256, 256)
+    img1 = torch.randn(1, 3, 256, 256)
+    res = model(img, img1)
+    print(res[0].shape, res[1].shape)
+    from thop import profile
+    # mmengine_flop_count(model, (3, 512, 512), show_table=True, show_arch=True)
+    flops1, params1 = profile(model, inputs=(img, img1))
+    print("flops=G", flops1)
+    print("parms=M", params1)
