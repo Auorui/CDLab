@@ -6,6 +6,7 @@ MSCANet    (A CNN-Transformer Network With Multiscale Context Aggregation for Fi
 ChangeFormer    (A Transformer-Based Siamese Network for Change Detection)
 DPCC-Net   (DPCC-Net: Dual-perspective change contextual network for change detection in high-resolution remote sensing images)
 USSFCNet   (Ultralightweight Spatial–Spectral Feature Cooperation Network for Change Detection in Remote Sensing Images)
+A2Net      (Lightweight Remote Sensing Change Detection With Progressive Feature Aggregation and Supervised Attention)
 STNet      (STNet: Spatial and Temporal feature fusion network for change detection in remote sensing images)
 MeGNet     (A Memory-Guided Network and a Novel Dataset for Cropland Semantic Change Detection)
 HATNet     (Hybrid Attention-Aware Transformer Network Collaborative Multiscale Feature Alignment for Building Change Detection)
@@ -27,6 +28,7 @@ MODEL_CLASSES = {
     "ChangeFormer"     : ChangeFormerV6,              # IGARSS 2022
     "DPCCNet"          : DPCCNet,                     # JAG 2022
     "USSFCNet"         : USSFCNet,                    # TGRS 2023
+    "A2Net"            : A2Net,                       # TGRS 2023
     "STNet"            : STNet,                       # ICME 2023
     "MeGNet"           : MeGNetApt,                   # TGRS 2024
     "HATNet"           : HATNet,                      # TIM 2024
