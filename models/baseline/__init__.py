@@ -14,3 +14,4 @@ from .hatnet import HATNet
 from .dpccnet import DPCCNet
 from .csdnet import CSDNet
 from .wdmfnet import WDMFNet
+from .a2net import A2Net
