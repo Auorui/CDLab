@@ -23,6 +23,7 @@ This page lists all change detection models currently supported in CDLab, along 
 | LCD_Net | [LCD-Net: A Lightweight Remote Sensing Change Detection Network Combining Feature Fusion and Gating Mechanism](https://ieeexplore.ieee.org/document/10897814) | JSTARS 2025 | [Link](https://github.com/WenyuLiu6/LCD-Net) | [blog](https://blog.csdn.net/m0_62919535/article/details/160144175) |
 | CSDNet | [Synergy of Content and Style: Enhanced Remote Sensing Change Detection via Disentanglement and Refinement](https://ieeexplore.ieee.org/document/11396066) | TGRS 2026 | [Link](https://github.com/dyzy41/CSDNet) | [blog](https://blog.csdn.net/m0_62919535/article/details/160283990) |
 | WDMFNet | [A Lightweight Wavelet-Aligned Difference and Mask-Guided Fusion Network for Change Detection](https://ieeexplore.ieee.org/abstract/document/11474595) | TGRS 2026 | [Link](https://github.com/LYT-Works/WDMF-Net) | - |
+| EnCANet | [EnCANet: A Network with Entropy-Guided Saliency and Cross-Spatial Attention for Urban Building Change Detection](https://ieeexplore.ieee.org/document/11458674) | TGRS 2026 | [Link](https://github.com/SkyeGe04/EnCANet) | - |
 
 ---
 
@@ -65,4 +66,5 @@ MODEL_CLASSES = {
     "LCD_Net"          : LCD_Net,                     # JSTARS 2025
     "CSDNet"           : CSDNet,                      # TGRS 2026
     "WDMFNet"          : WDMFNet,                     # TGRS 2026
+    "EnCANet"          : EnCANet,                     # LGRS 2026
 }
