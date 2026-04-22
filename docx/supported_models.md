@@ -22,7 +22,7 @@ This page lists all change detection models currently supported in CDLab, along 
 | ISDANet | [Interactive and Supervised Dual-Mode Attention Network for Remote Sensing Image Change Detection](https://ieeexplore.ieee.org/document/10879780) | TGRS 2025 | [Link](https://github.com/RenHongjin6/ISDANet) | [blog](https://blog.csdn.net/m0_62919535/article/details/159865710) |
 | LCD_Net | [LCD-Net: A Lightweight Remote Sensing Change Detection Network Combining Feature Fusion and Gating Mechanism](https://ieeexplore.ieee.org/document/10897814) | JSTARS 2025 | [Link](https://github.com/WenyuLiu6/LCD-Net) | [blog](https://blog.csdn.net/m0_62919535/article/details/160144175) |
 | CSDNet | [Synergy of Content and Style: Enhanced Remote Sensing Change Detection via Disentanglement and Refinement](https://ieeexplore.ieee.org/document/11396066) | TGRS 2026 | [Link](https://github.com/dyzy41/CSDNet) | [blog](https://blog.csdn.net/m0_62919535/article/details/160283990) |
-| WDMFNet | [A Lightweight Wavelet-Aligned Difference and Mask-Guided Fusion Network for Change Detection](https://ieeexplore.ieee.org/abstract/document/11474595) | TGRS 2026 | [Link](https://github.com/LYT-Works/WDMF-Net) | - |
+| WDMFNet | [A Lightweight Wavelet-Aligned Difference and Mask-Guided Fusion Network for Change Detection](https://ieeexplore.ieee.org/abstract/document/11474595) | TGRS 2026 | [Link](https://github.com/LYT-Works/WDMF-Net) | [blog](https://blog.csdn.net/m0_62919535/article/details/160406084) |
 | EnCANet | [EnCANet: A Network with Entropy-Guided Saliency and Cross-Spatial Attention for Urban Building Change Detection](https://ieeexplore.ieee.org/document/11458674) | LGRS 2026 | [Link](https://github.com/SkyeGe04/EnCANet) | - |
 
 ---
