@@ -158,11 +158,11 @@ class AlignedModule(nn.Module):
         return output
 
     def forward(self, x, y):
-        x = self.wavelet(x)
-        y = self.wavelet(y)
+        x = self.wavelet(x)   # 对 T1 做小波增强
+        y = self.wavelet(y)   # 对 T2 做小波增强
         cat = torch.cat([x, y], 1)
-        offset = self.offset_conv(cat)
-        warp_y = self.flow_warp(y, offset)
+        offset = self.offset_conv(cat)   # 预测光流
+        warp_y = self.flow_warp(y, offset)  # 对齐 T2
         return x, warp_y
 
 
@@ -474,7 +474,7 @@ class MSA_Module(nn.Module):
     def forward(self, x):
         skip = x
         mask = self.conv(x)
-        mask = torch.sigmoid(mask.detach())
+        mask = torch.sigmoid(mask.detach())   # 前景掩码
         xf = self.foreground(x, mask)      # Foreground
         xb = self.background(x, 1 - mask)  # Background
         x = torch.cat([xb, xf], dim=1)
