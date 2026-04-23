@@ -1,5 +1,6 @@
 import os
-import torch.utils.data
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+import torch
 import argparse
 from models.network import get_change_networks
 from utils import build_dataset, CDTrainEpoch, load_config, save_merged_config, CombinedLoss
@@ -26,7 +27,6 @@ if __name__=="__main__":
     redirect_console(os.path.join(timelog_dir, 'out.log'))
     pyzjr.show_config(args=args, yaml_path=args.config)
     save_merged_config(config, timelog_dir)
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
     gpu_ids = [int(id) for id in args.gpu_ids.split(',')]
     if torch.cuda.is_available():
         device = torch.device(f'cuda:{gpu_ids[0]}')
@@ -67,7 +67,7 @@ if __name__=="__main__":
         print(f"Initial training {model_cfg.name}")
 
     # load data
-    # binary classification change detection
+    # binary & multiclass classification change detection
     train_dataset = build_dataset(config, mode='train')
     val_dataset = build_dataset(config, mode='val')
     train_loader = TrainDataloader(train_dataset, batch_size=config.batch_size)
