@@ -1,5 +1,5 @@
 data:
-  dataset_path: 'data\CropSCD'
+  dataset_path: 'data/CropSCD'
   target_shape: 512
   num_classes: 9
   dir_n1: 'im1'

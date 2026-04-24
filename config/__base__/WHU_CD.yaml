@@ -1,5 +1,5 @@
 data:
-  dataset_path: 'data\WHU_CD'
+  dataset_path: 'data/WHU_CD'
   target_shape: 256
   num_classes: 2
   dir_n1: 'im1'

@@ -1,5 +1,5 @@
 data:
-  dataset_path: 'data\CLCD'
+  dataset_path: 'data/CLCD'
   target_shape: 512
   num_classes: 2
   dir_n1: 'image1'

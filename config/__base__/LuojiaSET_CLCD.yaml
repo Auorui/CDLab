@@ -1,6 +1,6 @@
 data:
-  dataset_path: 'data/LEVIR_CD'
-  target_shape: 256
+  dataset_path: 'data/LuojiaSET_CLCD'
+  target_shape: 512
   num_classes: 2
   dir_n1: 'A'
   dir_n2: 'B'
