@@ -8,6 +8,8 @@ All dataset configurations are defined under:
 
 Each dataset is described using a YAML file, which is automatically loaded and merged into the main config.
 
+We provide a brief introduction, download links, and the citation paper for a remote sensing change detection dataset via a [blog post](https://blog.csdn.net/m0_62919535/article/details/158573055)
+
 ---
 
 ### 🔹 Example: Binary Change Detection (CLCD)
