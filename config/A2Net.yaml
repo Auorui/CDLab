@@ -19,8 +19,8 @@ loss_weight: [1.0, 1.0]
 aux_loss_weights: [1.0, 1.0, 1.0, 1.0]
 
 epochs: 200
-batch_size: 2
+batch_size: 8
 
 log_dir: './logs'
-save_period: 50           # 每多少epoch保存一次模型
+save_period: 150           # 每多少epoch保存一次模型
 resume_training: null     # 恢复训练的checkpoint路径，如 './checkpoints/last.pth'
