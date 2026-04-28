@@ -15,3 +15,5 @@ from .dpccnet import DPCCNet
 from .csdnet import CSDNet
 from .wdmfnet import WDMFNet
 from .a2net import A2Net
+from .encanet import EnCANet
+from .elgcnet import ELGCNet
