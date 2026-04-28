@@ -10,6 +10,7 @@ A2Net      (Lightweight Remote Sensing Change Detection With Progressive Feature
 STNet      (STNet: Spatial and Temporal feature fusion network for change detection in remote sensing images)
 MeGNet     (A Memory-Guided Network and a Novel Dataset for Cropland Semantic Change Detection)
 HATNet     (Hybrid Attention-Aware Transformer Network Collaborative Multiscale Feature Alignment for Building Change Detection)
+ELGCNet    (ELGC-Net: Efficient Local–Global Context Aggregation for Remote Sensing Change Detection)
 DCSI_UNet  (A Dual-Stream UNet With Parallel Channel–Spatial Interaction and Aggregation for Change Detection)
 LENet      (A Remote Sensing Image Change Detection Method Integrating Layer-Exchange and Channel-Spatial Differences)
 ISDANet    (Interactive and Supervised Dual-Mode Attention Network for Remote Sensing Image Change Detection)
@@ -32,12 +33,15 @@ MODEL_CLASSES = {
     "STNet"            : STNet,                       # ICME 2023
     "MeGNet"           : MeGNetApt,                   # TGRS 2024
     "HATNet"           : HATNet,                      # TIM 2024
+    "ELGCNet"          : ELGCNet,                     # TGRS 2024
     "DCSI_UNet"        : DCSI_UNet,                   # TGRS 2025
     "LENet"            : LENet,                       # JSTARS 2025
     "ISDANet"          : ISDANet,                     # TGRS 2025
     "LCD_Net"          : LCD_Net,                     # JSTARS 2025
     "CSDNet"           : CSDNet,                      # TGRS 2026
     "WDMFNet"          : WDMFNet,                     # TGRS 2026
+    "EnCANet"          : EnCANet,                     # LGRS 2026
+
 }
 
 def get_change_networks(name, **kwargs):
