@@ -17,6 +17,7 @@ This page lists all change detection models currently supported in CDLab, along 
 | STNet | [STNet: Spatial and Temporal feature fusion network for change detection in remote sensing images](https://ieeexplore.ieee.org/document/10219826) | ICME 2023 | [Link](https://github.com/xwmaxwma/rschange) | - |
 | MeGNet | [A Memory-Guided Network and a Novel Dataset for Cropland Semantic Change Detection](https://ieeexplore.ieee.org/document/10579791) | TGRS 2024 | [Link](https://github.com/lsmlyn/CropSCD) | - |
 | HATNet | [Hybrid Attention-Aware Transformer Network Collaborative Multiscale Feature Alignment for Building Change Detection](https://ieeexplore.ieee.org/document/10462583) | TIM 2024 | [Link](https://github.com/yzygit1230/HATNet) | - |
+| ELGCNet | [ELGC-Net: Efficient Local–Global Context Aggregation for Remote Sensing Change Detection](https://ieeexplore.ieee.org/document/10423067) | TGRS 2024 | [Link](https://github.com/techmn/elgcnet) | - |
 | DCSI_UNet | [A Dual-Stream UNet With Parallel Channel–Spatial Interaction and Aggregation for Change Detection](https://ieeexplore.ieee.org/document/11299285) | TGRS 2025 | [Link](https://github.com/ZChaoyv/DCSI-UNet) | [blog](https://blog.csdn.net/m0_62919535/article/details/159467514) |
 | LENet | [A Remote Sensing Image Change Detection Method Integrating Layer-Exchange and Channel-Spatial Differences](https://ieeexplore.ieee.org/document/11024553) | JSTARS 2025 | [Link](https://github.com/dyzy41/lenet) | [blog](https://blog.csdn.net/m0_62919535/article/details/159824891) |
 | ISDANet | [Interactive and Supervised Dual-Mode Attention Network for Remote Sensing Image Change Detection](https://ieeexplore.ieee.org/document/10879780) | TGRS 2025 | [Link](https://github.com/RenHongjin6/ISDANet) | [blog](https://blog.csdn.net/m0_62919535/article/details/159865710) |
@@ -57,9 +58,11 @@ MODEL_CLASSES = {
     "ChangeFormer"     : ChangeFormerV6,              # IGARSS 2022
     "DPCCNet"          : DPCCNet,                     # JAG 2022
     "USSFCNet"         : USSFCNet,                    # TGRS 2023
+    "A2Net"            : A2Net,                       # TGRS 2023
     "STNet"            : STNet,                       # ICME 2023
     "MeGNet"           : MeGNetApt,                   # TGRS 2024
     "HATNet"           : HATNet,                      # TIM 2024
+    "ELGCNet"          : ELGCNet,                     # TGRS 2024
     "DCSI_UNet"        : DCSI_UNet,                   # TGRS 2025
     "LENet"            : LENet,                       # JSTARS 2025
     "ISDANet"          : ISDANet,                     # TGRS 2025
