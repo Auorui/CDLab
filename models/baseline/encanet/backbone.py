@@ -42,7 +42,7 @@ class EfficientNetV2S_Encoder(nn.Module):
 
             # 加载权重到完整模型
             full_model.load_state_dict(state_dict)
-            print("Successfully loaded EfficientNetV2-S ImageNet pretrained weights")
+            # print("Successfully loaded EfficientNetV2-S ImageNet pretrained weights")
 
         except Exception as e:
             print(f"Failed to load pretrained weights: {e}")
