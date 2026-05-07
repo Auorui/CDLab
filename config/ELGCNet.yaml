@@ -23,6 +23,7 @@ loss_type: ['ce', ]
 loss_weight: [1.0, ]
 aux_loss_weights: null
 
+# 300 epochs 
 epochs: 200
 batch_size: 8
 
