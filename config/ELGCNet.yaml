@@ -1,0 +1,31 @@
+# config/ELGCNet.yaml
+data_config: '__base__/LEVIR_CD.yaml'
+
+model:
+  name: 'ELGCNet'
+  params:
+    input_nc: 3
+    num_classes: 2
+    depths: [3, 3, 4, 3]
+    heads: [4, 4, 4, 4]
+    enc_channels: [64, 96, 128, 256]
+    decoder_softmax: false
+    dec_embed_dim: 256
+
+optimizer_type: 'adamw'        # adam, adamw, sgd
+lr: 0.0001
+momentum: 0.9
+weight_decay: 0.0001
+scheduler_type: 'gradual_warm'
+warmup_epochs: 5
+
+loss_type: ['ce', ]
+loss_weight: [1.0, ]
+aux_loss_weights: null
+
+epochs: 200
+batch_size: 8
+
+log_dir: './logs'
+save_period: 50           # 每多少epoch保存一次模型
+resume_training: null     # 恢复训练的checkpoint路径，如 './checkpoints/last.pth'
