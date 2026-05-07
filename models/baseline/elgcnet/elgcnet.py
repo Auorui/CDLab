@@ -497,7 +497,7 @@ class ELGCNet(nn.Module):
 
 ######################################################################################
 if __name__ == '__main__':
-    model = ELGCNet(input_nc=3, output_nc=2, depths=[3, 3, 4, 3], heads=[4, 4, 4, 4],
+    model = ELGCNet(input_nc=3, num_classes=2, depths=[3, 3, 4, 3], heads=[4, 4, 4, 4],
                     enc_channels=[64, 96, 128, 256], decoder_softmax=False, dec_embed_dim=256)
     print(model)
 
