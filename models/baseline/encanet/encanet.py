@@ -65,8 +65,8 @@ class EnCANet(nn.Module):
             self,
             spatial_dims: int = 2,
             in_channels: int = 3,
-            out_channels: int = 2,
-            backbone_name: str = 'tiny',
+            num_classes: int = 2,
+            backbone_name: str = 'efficientnetv2_s_22k',
             pretrained: bool = True,
             backbone_trainable: bool = True,
             **kwargs
@@ -78,7 +78,7 @@ class EnCANet(nn.Module):
 
         self.spatial_dims = spatial_dims
         self.in_channels = in_channels
-        self.out_channels = out_channels
+        self.out_channels = num_classes
         self.backbone_name = backbone_name
         self.pretrained = pretrained
         self.backbone_trainable = backbone_trainable
@@ -144,7 +144,7 @@ class EnCANet(nn.Module):
                 use_se=False,
                 use_residual=True
             ),
-            nn.Conv2d(self.size_change[-1], out_channels, kernel_size=1)
+            nn.Conv2d(self.size_change[-1], num_classes, kernel_size=1)
         )
 
         self.register_hook(self.encoder)
@@ -160,26 +160,14 @@ class EnCANet(nn.Module):
             use_temporal_se = False
             use_spatial_se = False
 
-            if stage == 0:
-
-                fusion_module = TwoStageUniFiREFusion(
-                    encoder_channels=self.feature_dims[stage],
-                    decoder_channels=None,
-                    temporal_fusion_method=self.temporal_fusion_method,
-                    spatial_fusion_method=self.spatial_fusion_method,
-                    use_temporal_se=use_temporal_se,
-                    use_spatial_se=use_spatial_se
-                )
-            else:
-
-                fusion_module = TwoStageUniFiREFusion(
-                    encoder_channels=self.feature_dims[stage],
-                    decoder_channels=self.size_change[stage - 1],
-                    temporal_fusion_method=self.temporal_fusion_method,
-                    spatial_fusion_method=self.spatial_fusion_method,
-                    use_temporal_se=use_temporal_se,
-                    use_spatial_se=use_spatial_se
-                )
+            fusion_module = TwoStageUniFiREFusion(
+                encoder_channels=self.feature_dims[stage],
+                decoder_channels=None if stage == 0 else self.size_change[stage - 1],
+                temporal_fusion_method=self.temporal_fusion_method,
+                spatial_fusion_method=self.spatial_fusion_method,
+                use_temporal_se=use_temporal_se,
+                use_spatial_se=use_spatial_se
+            )
 
             self.FusionBlocks.append(fusion_module)
 
@@ -273,23 +261,17 @@ class EnCANet(nn.Module):
 
         return change
 
+if __name__ == "__main__":
+    x1 = torch.rand(1, 3, 256, 256).cuda()
+    x2 = torch.rand(1, 3, 256, 256).cuda()
+    Net = EnCANet().cuda()
 
-def getEnCANet(
-        spatial_dims: int = 2,
-        in_channels: int = 3,
-        out_channels: int = 2,
-        backbone_name: str = 'tiny',
-        pretrained: bool = True,
-        backbone_trainable: bool = True,
-        **kwargs
-):
-    model = EnCANet(
-        spatial_dims=spatial_dims,
-        in_channels=in_channels,
-        out_channels=out_channels,
-        backbone_name=backbone_name,
-        pretrained=pretrained,
-        backbone_trainable=backbone_trainable,
-        **kwargs
-    )
-    return model
+    out = Net(x1, x2)
+    print(out.shape)
+
+    # Calculate GFLOPs & Parameters / 计算 FLOPs 与参数量
+    from thop import profile
+
+    flops, params = profile(Net, inputs=(x1, x2))
+    print(f"Model FLOPs: {flops / 1e9:.4f} GFLOPs")
+    print(f"Model Parameters: {params / 1e6:.2f} M")
