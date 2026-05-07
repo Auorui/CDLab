@@ -17,6 +17,7 @@ ISDANet    (Interactive and Supervised Dual-Mode Attention Network for Remote Se
 LCD-Net    (LCD-Net: A Lightweight Remote Sensing Change Detection Network Combining Feature Fusion and Gating Mechanism)
 CSDNet     (Synergy of Content and Style: Enhanced Remote Sensing Change Detection via Disentanglement and Refinement)
 WDMFNet    (A Lightweight Wavelet-Aligned Difference and Mask-Guided Fusion Network for Change Detection)
+EnCANet    (EnCANet: A Network with Entropy-Guided Saliency and Cross-Spatial Attention for Urban Building Change Detection)
 
 """
 from models.baseline import *
@@ -41,7 +42,6 @@ MODEL_CLASSES = {
     "CSDNet"           : CSDNet,                      # TGRS 2026
     "WDMFNet"          : WDMFNet,                     # TGRS 2026
     "EnCANet"          : EnCANet,                     # LGRS 2026
-
 }
 
 def get_change_networks(name, **kwargs):
