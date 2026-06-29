@@ -53,7 +53,7 @@ class CDInference(object):
 
     def _init_metrics(self):
         if self.num_classes == 2:
-            # 二分类：建议用 binary 口径
+            # 二分类
             self.metric_acc = torchmetrics.Accuracy(task='binary').to(self.device)
             self.metric_prec = torchmetrics.Precision(task='binary').to(self.device)
             self.metric_recall = torchmetrics.Recall(task='binary').to(self.device)
@@ -108,7 +108,7 @@ class CDInference(object):
         预测整个数据集, mode: 数据集模式（train/val/test）
         """
         dataset = build_dataset(self.config, mode=mode)
-        dataloader = DataLoader(dataset, batch_size=2, num_workers=2, shuffle=False)
+        dataloader = DataLoader(dataset, batch_size=1, num_workers=2, shuffle=False)
 
         print(f"Prediction dataset: {os.path.join(self.data_config.dataset_path, mode)}, containing {len(dataset)} image pairs")
 
