@@ -18,6 +18,7 @@ LCD-Net    (LCD-Net: A Lightweight Remote Sensing Change Detection Network Combi
 CSDNet     (Synergy of Content and Style: Enhanced Remote Sensing Change Detection via Disentanglement and Refinement)
 WDMFNet    (A Lightweight Wavelet-Aligned Difference and Mask-Guided Fusion Network for Change Detection)
 EnCANet    (EnCANet: A Network with Entropy-Guided Saliency and Cross-Spatial Attention for Urban Building Change Detection)
+LGMMNet    (LGMM-Net: A Local–Global Encoder and Mask Mamba Decoder Network for Remote Sensing Change Detection)
 
 """
 from models.baseline import *
@@ -42,6 +43,7 @@ MODEL_CLASSES = {
     "CSDNet"           : CSDNet,                      # TGRS 2026
     "WDMFNet"          : WDMFNet,                     # TGRS 2026
     "EnCANet"          : EnCANet,                     # LGRS 2026
+    "LGMMNet"          : LGMMNet                      # TGRS 2026
 }
 
 def get_change_networks(name, **kwargs):
