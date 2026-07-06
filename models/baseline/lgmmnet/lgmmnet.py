@@ -28,8 +28,8 @@ class LGMMNet(nn.Module):
         enc1_out = self.enc(x1)
         enc2_out = self.enc(x2)
         change_map = self.dec(enc1_out, enc2_out)
-        if 'elgc_decoder' in self.setting['decoder_module']:
-            return change_map
+        # if 'elgc_decoder' in self.setting['decoder_module']:
+        #     return change_map
         output, out_128, out_64, out_32, out_16 = change_map
         mask1 = F.interpolate(out_128, scale_factor=2, mode='bilinear', align_corners=False).clamp(min=-20, max=20)
         mask2 = F.interpolate(out_64, scale_factor=4, mode='bilinear', align_corners=False).clamp(min=-20, max=20)
