@@ -18,7 +18,7 @@ warmup_epochs: 5
 
 loss_type: ['ce', ]
 loss_weight: [1.0, ]
-aux_loss_weights: null
+aux_loss_weights: [1.0, 1.0, 1.0, 1.0, 1.0]
 
 # 原文 300
 epochs: 200
