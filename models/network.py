@@ -68,6 +68,3 @@ if __name__ == "__main__":
     flops, params = profile(Net, inputs=(x1, x2))
     print(f"Model FLOPs: {flops / 1e9:.4f} GFLOPs")
     print(f"Model Parameters: {params / 1e6:.2f} M")
-
-
-
