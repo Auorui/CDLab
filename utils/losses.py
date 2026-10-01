@@ -308,7 +308,7 @@ class CombinedLoss(nn.Module):
         if loss_type is None:
             loss_type = ['ce', 'dice', 'focal', 'iou', 'tanimoto']
         if loss_weight is None:
-            loss_weight = [1.0, 0.5, 0.5, 0.5]
+            loss_weight = [1.0] * len(loss_type)
         self.loss_type = loss_type
         self.loss_weight = loss_weight
         self.reduction = reduction
