@@ -84,7 +84,8 @@ class CLCDataset(BaseDataset):
                 np.all(rgb_image_label == np.array(self.color_map['Changed']), axis=-1)
             ] = 1
         else:
-            label_seg = cv2.cvtColor(rgb_image_label, cv2.COLOR_RGB2GRAY)
+            gray_label = cv2.cvtColor(rgb_image_label, cv2.COLOR_RGB2GRAY)
+            label_seg = np.where(gray_label >= 127, 1, 0).astype(np.uint8)
         return label_seg
 
 
