@@ -82,7 +82,8 @@ class CDTrainEpoch(object):
                 num_classes=self.num_classes,
                 average='macro'
             )
-            metric_acc = torchmetrics.Accuracy(**metric_cfg).to(self.device)
+            metric_acc = torchmetrics.Accuracy(
+                task='multiclass', num_classes=self.num_classes, average='micro').to(self.device)
             metric_prec = torchmetrics.Precision(**metric_cfg).to(self.device)
             metric_recall = torchmetrics.Recall(**metric_cfg).to(self.device)
             metric_f1 = torchmetrics.F1Score(**metric_cfg).to(self.device)
