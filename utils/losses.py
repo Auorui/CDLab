@@ -1,312 +1,566 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
-import numpy as np
 
+class _SegLossBase(nn.Module):
+    def __init__(
+        self,
+        num_classes=2,
+        ignore_index=256,
+        reduction="mean",
+    ):
+        super().__init__()
 
-class CrossEntropyLoss(nn.Module):
-    def __init__(self, weight=None, reduction='mean', ignore_index=256):
-        super(CrossEntropyLoss, self).__init__()
-        self.weight = weight
-        self.ignore_index = ignore_index
-        self.reduction = reduction
+        if num_classes < 2:
+            raise ValueError("num_classes must be >= 2")
 
-    def forward(self, input, target):
-        """
-        Args:
-            input: (B, C, H, W) logits
-            target: (B, H, W) or (B, 1, H, W) labels
-        """
-        target = target.long()
-        if target.dim() == 4:
-            target = torch.squeeze(target, dim=1)
-        if input.shape[-2:] != target.shape[-2:]:
-            input = F.interpolate(input, size=target.shape[1:], mode='bilinear', align_corners=True)
+        if reduction not in ("none", "mean", "sum"):
+            raise ValueError(f"Unsupported reduction: {reduction}")
 
-        return F.cross_entropy(input=input, target=target, weight=self.weight,
-                               ignore_index=self.ignore_index, reduction=self.reduction)
-
-
-class DiceLoss(nn.Module):
-    def __init__(self, num_classes=2, smooth=1e-5, ignore_index=256, reduction='mean'):
-        super(DiceLoss, self).__init__()
         self.num_classes = num_classes
         self.ignore_index = ignore_index
-        self.smooth = smooth
         self.reduction = reduction
 
-    def forward(self, input, target):
-        """
-        Args:
-            input: (B, C, H, W) logits
-            target: (B, H, W) or (B, 1, H, W) labels
-        Returns:
-            loss: scalar if reduction='mean'/'sum', else (B,) tensor
-        """
-        target = target.long()
-        if target.dim() == 4:
-            target = torch.squeeze(target, dim=1)
-        if input.shape[-2:] != target.shape[-2:]:
-            input = F.interpolate(input, size=target.shape[1:], mode='bilinear', align_corners=True)
+    def _prepare_input_target(self, input, target):
+        if input.dim() != 4:
+            raise ValueError(
+                f"input must be (B,C,H,W), got {input.shape}"
+            )
 
-        prob = F.softmax(input, dim=1)
-        if self.ignore_index is not None:
-            valid_mask = (target != self.ignore_index)
+        if input.size(1) != self.num_classes:
+            raise ValueError(
+                f"input channels={input.size(1)} does not match "
+                f"num_classes={self.num_classes}"
+            )
+
+        if target.dim() == 4:
+            if target.size(1) != 1:
+                raise ValueError(
+                    f"target must be (B,1,H,W), got {target.shape}"
+                )
+            target = target[:, 0]
+
+        if target.dim() != 3:
+            raise ValueError(
+                f"target must be (B,H,W) or (B,1,H,W), "
+                f"got {target.shape}"
+            )
+
+        target = target.long()
+
+        if input.shape[-2:] != target.shape[-2:]:
+            input = F.interpolate(
+                input,
+                size=target.shape[-2:],
+                mode="bilinear",
+                align_corners=False,
+            )
+
+        if self.ignore_index is None:
+            valid_mask = torch.ones_like(
+                target,
+                dtype=torch.bool,
+            )
         else:
-            valid_mask = torch.ones_like(target, dtype=torch.bool)
+            valid_mask = target != self.ignore_index
+
+        invalid = valid_mask & (
+            (target < 0) |
+            (target >= self.num_classes)
+        )
+
+        if invalid.any():
+            invalid_values = torch.unique(target[invalid]).tolist()
+            raise ValueError(
+                f"target contains invalid class ids: {invalid_values}"
+            )
 
         target_safe = target.clone()
         target_safe[~valid_mask] = 0
 
-        target_one_hot = F.one_hot(target_safe, num_classes=self.num_classes).permute(0, 3, 1, 2).float()
-        mask = valid_mask.unsqueeze(1).float()
+        return input, target, target_safe, valid_mask
 
-        if self.num_classes == 2:
-            # 二分类：只处理前景类
-            prob_fg = prob[:, 1:2, :, :]  # (B, 1, H, W)
-            target_fg = target_one_hot[:, 1:2, :, :]
-
-            # 应用mask
-            prob_fg = prob_fg * mask
-            target_fg = target_fg * mask
-
-            # 计算每个样本的Dice
-            intersection = (prob_fg * target_fg).view(prob_fg.size(0), -1).sum(dim=1)
-            union = prob_fg.view(prob_fg.size(0), -1).sum(dim=1) + \
-                    target_fg.view(target_fg.size(0), -1).sum(dim=1)
-
-            # 处理union为0的情况
-            dice = torch.ones_like(intersection)
-            valid = union > 0
-            dice[valid] = (2. * intersection[valid] + self.smooth) / (union[valid] + self.smooth)
-            loss = 1 - dice
-
-        else:
-            # 多分类：计算所有类别的Dice
-            prob_masked = prob * mask
-            target_masked = target_one_hot * mask
-
-            # 计算每个样本、每个类别的intersection和union
-            intersection = (prob_masked * target_masked).view(
-                prob_masked.size(0), prob_masked.size(1), -1).sum(dim=2)
-            union = prob_masked.view(prob_masked.size(0), prob_masked.size(1), -1).sum(dim=2) + \
-                    target_masked.view(target_masked.size(0), target_masked.size(1), -1).sum(dim=2)
-
-            # 计算每个类别的Dice
-            dice = torch.ones_like(intersection)
-            valid = union > 0
-            dice[valid] = (2. * intersection[valid] + self.smooth) / (union[valid] + self.smooth)
-
-            # 对每个样本，对所有类别取平均
-            loss = 1 - dice.mean(dim=1)
-
-        # 应用reduction
-        if self.reduction == 'mean':
-            loss = loss.mean()
-        elif self.reduction == 'sum':
-            loss = loss.sum()
-        # reduction='none'时返回每个样本的损失
-
-        return loss
-
-
-class FocalLoss(nn.Module):
-    """
-    Focal Loss for binary and multi-class segmentation
-    Reference: https://arxiv.org/abs/1708.02002
-    """
-
-    def __init__(self, num_classes=2, alpha=0.25, gamma=2.0, reduction='mean', ignore_index=256):
-        super(FocalLoss, self).__init__()
-        self.num_classes = num_classes
-        self.alpha = alpha
-        self.gamma = gamma
-        self.reduction = reduction
-        self.ignore_index = ignore_index
-
-    def forward(self, input, target):
+    def _reduce_pixel_loss(self, pixel_loss, valid_mask):
         """
-        Args:
-            input: (B, C, H, W) logits
-            target: (B, H, W) or (B, 1, H, W) labels
-        Returns:
-            loss: scalar if reduction='mean'/'sum', else (B,) tensor
+        pixel_loss: (B,H,W)
+        valid_mask: (B,H,W)
+
+        reduction='none' 返回每个样本一个损失，形状为 (B)。
         """
-        # 维度处理
-        if target.dim() == 4:
-            target = torch.squeeze(target, dim=1)
-        target = target.long()
+        valid_mask = valid_mask.to(dtype=pixel_loss.dtype)
 
-        if input.shape[-2:] != target.shape[-2:]:
-            input = F.interpolate(input, size=target.shape[1:], mode='bilinear', align_corners=True)
-        ce_loss = F.cross_entropy(input, target, reduction='none', ignore_index=self.ignore_index)
-        pt = torch.exp(-ce_loss)
-        focal_loss = (1 - pt) ** self.gamma * ce_loss
-        if self.alpha is not None:
-            if self.num_classes == 2:
-                alpha_t = torch.ones_like(target, dtype=torch.float)
-                alpha_t[target == 1] = self.alpha
-                alpha_t[target == 0] = 1 - self.alpha
-                if self.ignore_index is not None:
-                    alpha_t[target == self.ignore_index] = 0
-                focal_loss = alpha_t * focal_loss
-            else:
-                if isinstance(self.alpha, (int, float)):
-                    # 标量alpha：背景为1-alpha，前景为alpha
-                    alpha_t = torch.ones_like(target, dtype=torch.float) * (1 - self.alpha)
-                    for c in range(1, self.num_classes):
-                        alpha_t[target == c] = self.alpha
-                elif isinstance(self.alpha, (list, tuple, np.ndarray)):
-                    # 列表alpha：每个类别单独设置
-                    alpha_t = torch.zeros_like(target, dtype=torch.float)
-                    for c in range(self.num_classes):
-                        alpha_t[target == c] = self.alpha[c]
-                else:
-                    raise ValueError(f"Unsupported alpha type: {type(self.alpha)}")
+        loss_sum = (
+            pixel_loss * valid_mask
+        ).flatten(1).sum(dim=1)
 
-                if self.ignore_index is not None:
-                    alpha_t[target == self.ignore_index] = 0
-                focal_loss = alpha_t * focal_loss
+        valid_count = valid_mask.flatten(1).sum(dim=1)
 
-        # 计算每个样本的损失
-        if self.ignore_index is not None:
-            mask = (target != self.ignore_index).float()
-            # 每个样本的损失和
-            batch_loss = (focal_loss * mask).view(focal_loss.size(0), -1).sum(dim=1)
-            # 每个样本的有效像素数
-            valid_pixels = mask.view(mask.size(0), -1).sum(dim=1)
-            # 避免除以0
-            batch_loss = batch_loss / (valid_pixels + 1e-8)
-        else:
-            batch_loss = focal_loss.view(focal_loss.size(0), -1).mean(dim=1)
+        loss_per_sample = loss_sum / valid_count.clamp_min(1.0)
 
-        # 应用reduction
-        if self.reduction == 'mean':
-            loss = batch_loss.mean()
-        elif self.reduction == 'sum':
-            loss = batch_loss.sum()
-        else:  # 'none'
-            loss = batch_loss
+        # 整个样本都是 ignore_index 时，损失置 0
+        loss_per_sample = torch.where(
+            valid_count > 0,
+            loss_per_sample,
+            torch.zeros_like(loss_per_sample),
+        )
 
-        return loss
+        if self.reduction == "none":
+            return loss_per_sample
 
-class JaccardLoss(nn.Module):
-    def __init__(self, num_classes=2, smooth=1e-5, ignore_index=256, reduction='mean'):
-        super(JaccardLoss, self).__init__()
-        self.num_classes = num_classes
+        if self.reduction == "mean":
+            return loss_per_sample.mean()
+
+        return loss_per_sample.sum()
+
+class _OverlapLossBase(_SegLossBase):
+    def __init__(
+        self,
+        num_classes=2,
+        smooth=1e-5,
+        ignore_index=256,
+        reduction="mean",
+        include_background=False,
+    ):
+        super().__init__(
+            num_classes=num_classes,
+            ignore_index=ignore_index,
+            reduction=reduction,
+        )
+
         self.smooth = smooth
-        self.ignore_index = ignore_index
-        self.reduction = reduction
+        self.include_background = include_background
 
-    def forward(self, input, target):
-        """
-        Args:
-            input: (B, C, H, W) logits
-            target: (B, H, W) or (B, 1, H, W) labels
-        Returns:
-            loss: scalar if reduction='mean'/'sum', else (B,) tensor
-        """
-        target = target.long()
-        if target.dim() == 4:
-            target = torch.squeeze(target, dim=1)
-        if input.shape[-2:] != target.shape[-2:]:
-            input = F.interpolate(input, size=target.shape[-2:], mode='bilinear', align_corners=True)
-
-        prob = F.softmax(input, dim=1)
-        if self.ignore_index is not None:
-            valid_mask = (target != self.ignore_index)
-        else:
-            valid_mask = torch.ones_like(target, dtype=torch.bool)
-
-        # 将 target 转换为 one-hot 编码
-        target_one_hot = F.one_hot(target, num_classes=self.num_classes).permute(0, 3, 1, 2).float()
-        mask = valid_mask.unsqueeze(1).float()
-
-        intersection = (prob * target_one_hot * mask).sum(dim=[2, 3])
-        union = (prob * mask).sum(dim=[2, 3]) + (target_one_hot * mask).sum(dim=[2, 3])
-
-        jaccard = (intersection + self.smooth) / (union + self.smooth)
-        loss = 1 - jaccard
-
-        # 对每个类别取平均损失
-        if self.reduction == 'mean':
-            loss = loss.mean()
-        elif self.reduction == 'sum':
-            loss = loss.sum()
-
-        return loss
-
-class TanimotoLoss(nn.Module):
-    def __init__(self, num_classes=2, smooth=1e-5, ignore_index=256, reduction='mean'):
-        super(TanimotoLoss, self).__init__()
-        self.num_classes = num_classes
-        self.smooth = smooth
-        self.ignore_index = ignore_index
-        self.reduction = reduction
-
-    def forward(self, input, target):
-        """
-        input: (B, C, H, W) logits
-        target: (B, H, W) or (B, 1, H, W)
-        """
-        if target.dim() == 4:
-            target = torch.squeeze(target, dim=1)
-        target = target.long()
-
-        if input.shape[-2:] != target.shape[-2:]:
-            input = F.interpolate(input, size=target.shape[-2:], mode='bilinear', align_corners=True)
+    def _prepare_overlap(self, input, target):
+        input, _, target_safe, valid_mask = \
+            self._prepare_input_target(input, target)
 
         prob = F.softmax(input, dim=1)
 
-        # mask
-        if self.ignore_index is not None:
-            valid_mask = (target != self.ignore_index)
-        else:
-            valid_mask = torch.ones_like(target, dtype=torch.bool)
+        target_one_hot = F.one_hot(
+            target_safe,
+            num_classes=self.num_classes,
+        ).permute(0, 3, 1, 2).to(dtype=input.dtype)
 
-        target_safe = target.clone()
-        target_safe[~valid_mask] = 0
-
-        target_one_hot = F.one_hot(target_safe, num_classes=self.num_classes)\
-                            .permute(0, 3, 1, 2).float()
-
-        mask = valid_mask.unsqueeze(1).float()
+        mask = valid_mask.unsqueeze(1).to(dtype=input.dtype)
 
         prob = prob * mask
         target_one_hot = target_one_hot * mask
 
-        # ===== Tanimoto =====
-        intersection = (prob * target_one_hot).sum(dim=[2, 3])
-        p2 = (prob * prob).sum(dim=[2, 3])
-        t2 = (target_one_hot * target_one_hot).sum(dim=[2, 3])
+        if self.num_classes == 2:
+            if self.include_background:
+                class_ids = [0, 1]
+            else:
+                # 二分类默认只计算前景
+                class_ids = [1]
+        else:
+            if self.include_background:
+                class_ids = list(range(self.num_classes))
+            else:
+                class_ids = list(range(1, self.num_classes))
 
-        tanimoto = (intersection + self.smooth) / (p2 + t2 - intersection + self.smooth)
+        prob = prob[:, class_ids]
+        target_one_hot = target_one_hot[:, class_ids]
 
-        intersection_c = ((1 - prob) * (1 - target_one_hot)).sum(dim=[2, 3])
-        p2_c = ((1 - prob) ** 2).sum(dim=[2, 3])
-        t2_c = ((1 - target_one_hot) ** 2).sum(dim=[2, 3])
+        intersection = (
+            prob * target_one_hot
+        ).sum(dim=(2, 3))
 
-        tanimoto_c = (intersection_c + self.smooth) / (p2_c + t2_c - intersection_c + self.smooth)
+        prob_sum = prob.sum(dim=(2, 3))
+        target_sum = target_one_hot.sum(dim=(2, 3))
 
-        tanimoto_final = 0.5 * (tanimoto + tanimoto_c)
+        valid_pixels = valid_mask.sum(dim=(1, 2))
 
-        loss = 1 - tanimoto_final
-        # 类别平均
-        loss = loss.mean(dim=1)
-        if self.reduction == 'mean':
-            loss = loss.mean()
-        elif self.reduction == 'sum':
-            loss = loss.sum()
+        class_valid = (
+            (valid_pixels > 0).unsqueeze(1)
+            & ((prob_sum + target_sum) > 0)
+        )
 
-        return loss
+        return (
+            intersection,
+            prob_sum,
+            target_sum,
+            class_valid,
+        )
+
+    def _reduce_class_loss(self, class_loss, class_valid):
+        class_loss = (
+            class_loss
+            * class_valid.to(dtype=class_loss.dtype)
+        )
+
+        valid_class_count = \
+            class_valid.sum(dim=1).clamp_min(1)
+
+        loss = (
+            class_loss.sum(dim=1)
+            / valid_class_count
+        )
+
+        loss = torch.where(
+            class_valid.any(dim=1),
+            loss,
+            torch.zeros_like(loss),
+        )
+
+        if self.reduction == "none":
+            return loss
+
+        if self.reduction == "mean":
+            return loss.mean()
+
+        return loss.sum()
+
+class CrossEntropyLoss(_SegLossBase):
+    def __init__(
+        self,
+        num_classes=2,
+        weight=None,
+        reduction="mean",
+        ignore_index=256,
+    ):
+        super().__init__(
+            num_classes=num_classes,
+            ignore_index=ignore_index,
+            reduction=reduction,
+        )
+
+        if weight is not None:
+            weight = torch.as_tensor(
+                weight,
+                dtype=torch.float32,
+            )
+            if weight.numel() != num_classes:
+                raise ValueError(
+                    "weight length must equal num_classes"
+                )
+            self.register_buffer("weight", weight)
+        else:
+            self.weight = None
+
+    def forward(self, input, target):
+        input, target, _, valid_mask = \
+            self._prepare_input_target(input, target)
+
+        if self.ignore_index is None:
+            pixel_loss = F.cross_entropy(
+                input,
+                target,
+                weight=self.weight,
+                reduction="none",
+            )
+        else:
+            pixel_loss = F.cross_entropy(
+                input,
+                target,
+                weight=self.weight,
+                ignore_index=self.ignore_index,
+                reduction="none",
+            )
+
+        return self._reduce_pixel_loss(
+            pixel_loss,
+            valid_mask,
+        )
+
+class FocalLoss(_SegLossBase):
+    def __init__(
+        self,
+        num_classes=2,
+        alpha=0.25,
+        gamma=2.0,
+        reduction="mean",
+        ignore_index=256,
+    ):
+        super().__init__(
+            num_classes=num_classes,
+            ignore_index=ignore_index,
+            reduction=reduction,
+        )
+
+        if gamma < 0:
+            raise ValueError("gamma must be >= 0")
+
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def _get_alpha_factor(
+        self,
+        target_safe,
+        valid_mask,
+        dtype,
+    ):
+        if self.alpha is None:
+            return torch.ones_like(
+                target_safe,
+                dtype=dtype,
+            )
+
+        if isinstance(self.alpha, (int, float)):
+            alpha = float(self.alpha)
+
+            if not 0.0 <= alpha <= 1.0:
+                raise ValueError(
+                    "scalar alpha must be in [0, 1]"
+                )
+
+            if self.num_classes == 2:
+                # 二分类：前景 alpha，背景 1-alpha
+                alpha_factor = torch.where(
+                    target_safe == 1,
+                    torch.full_like(
+                        target_safe,
+                        alpha,
+                        dtype=dtype,
+                    ),
+                    torch.full_like(
+                        target_safe,
+                        1.0 - alpha,
+                        dtype=dtype,
+                    ),
+                )
+            else:
+                # 多分类：背景 1-alpha，所有前景 alpha
+                alpha_factor = torch.where(
+                    target_safe == 0,
+                    torch.full_like(
+                        target_safe,
+                        1.0 - alpha,
+                        dtype=dtype,
+                    ),
+                    torch.full_like(
+                        target_safe,
+                        alpha,
+                        dtype=dtype,
+                    ),
+                )
+
+        else:
+            alpha_vector = torch.as_tensor(
+                self.alpha,
+                dtype=dtype,
+                device=target_safe.device,
+            )
+
+            if alpha_vector.numel() != self.num_classes:
+                raise ValueError(
+                    "alpha length must equal num_classes"
+                )
+
+            alpha_factor = alpha_vector[target_safe]
+
+        return alpha_factor * valid_mask.to(dtype=dtype)
+
+    def forward(self, input, target):
+        input, target, target_safe, valid_mask = \
+            self._prepare_input_target(input, target)
+
+        if self.ignore_index is None:
+            ce_loss = F.cross_entropy(
+                input,
+                target,
+                reduction="none",
+            )
+        else:
+            ce_loss = F.cross_entropy(
+                input,
+                target,
+                ignore_index=self.ignore_index,
+                reduction="none",
+            )
+
+        pt = torch.exp(-ce_loss)
+
+        alpha_factor = self._get_alpha_factor(
+            target_safe=target_safe,
+            valid_mask=valid_mask,
+            dtype=ce_loss.dtype,
+        )
+
+        focal_loss = (
+            alpha_factor
+            * (1.0 - pt).pow(self.gamma)
+            * ce_loss
+        )
+
+        return self._reduce_pixel_loss(
+            focal_loss,
+            valid_mask,
+        )
+
+
+class DiceLoss(_OverlapLossBase):
+    def forward(self, input, target):
+        intersection, prob_sum, target_sum, class_valid = \
+            self._prepare_overlap(input, target)
+
+        denominator = prob_sum + target_sum
+
+        dice = (
+            2.0 * intersection + self.smooth
+        ) / (
+            denominator + self.smooth
+        )
+
+        return self._reduce_class_loss(
+            1.0 - dice,
+            class_valid,
+        )
+
+
+class JaccardLoss(_OverlapLossBase):
+    def forward(self, input, target):
+        intersection, prob_sum, target_sum, class_valid = \
+            self._prepare_overlap(input, target)
+
+        # Jaccard 的并集要减掉 intersection
+        union = prob_sum + target_sum - intersection
+
+        jaccard = (
+            intersection + self.smooth
+        ) / (
+            union + self.smooth
+        )
+
+        return self._reduce_class_loss(
+            1.0 - jaccard,
+            class_valid,
+        )
+
+class TanimotoLoss(_OverlapLossBase):
+    def __init__(
+        self,
+        num_classes=2,
+        smooth=1e-5,
+        ignore_index=256,
+        reduction="mean",
+        include_background=False,
+        use_complement=True,
+    ):
+        super().__init__(
+            num_classes=num_classes,
+            smooth=smooth,
+            ignore_index=ignore_index,
+            reduction=reduction,
+            include_background=include_background,
+        )
+
+        self.use_complement = use_complement
+
+    def forward(self, input, target):
+        input, _, target_safe, valid_mask = \
+            self._prepare_input_target(input, target)
+
+        prob = F.softmax(input, dim=1)
+
+        target_one_hot = F.one_hot(
+            target_safe,
+            num_classes=self.num_classes,
+        ).permute(0, 3, 1, 2).to(dtype=input.dtype)
+
+        mask = valid_mask.unsqueeze(1).to(dtype=input.dtype)
+
+        if self.num_classes == 2:
+            if self.include_background:
+                class_ids = [0, 1]
+            else:
+                # 二分类默认只计算前景
+                class_ids = [1]
+        else:
+            if self.include_background:
+                class_ids = list(range(self.num_classes))
+            else:
+                # 多分类默认忽略背景
+                class_ids = list(range(1, self.num_classes))
+
+        prob = prob[:, class_ids]
+        target_one_hot = target_one_hot[:, class_ids]
+
+        # 注意：这里不要提前 prob = prob * mask
+        # 每个统计项单独乘 mask，避免 ignore 区域进入 complement 分支
+        intersection = (
+            prob * target_one_hot * mask
+        ).sum(dim=(2, 3))
+
+        p2 = (
+            prob * prob * mask
+        ).sum(dim=(2, 3))
+
+        t2 = (
+            target_one_hot
+            * target_one_hot
+            * mask
+        ).sum(dim=(2, 3))
+
+        tanimoto = (
+            intersection + self.smooth
+        ) / (
+            p2 + t2 - intersection + self.smooth
+        )
+
+        if self.use_complement:
+            prob_complement = 1.0 - prob
+            target_complement = 1.0 - target_one_hot
+
+            intersection_c = (
+                prob_complement
+                * target_complement
+                * mask
+            ).sum(dim=(2, 3))
+
+            p2_c = (
+                prob_complement
+                * prob_complement
+                * mask
+            ).sum(dim=(2, 3))
+
+            t2_c = (
+                target_complement
+                * target_complement
+                * mask
+            ).sum(dim=(2, 3))
+
+            tanimoto_c = (
+                intersection_c + self.smooth
+            ) / (
+                p2_c + t2_c - intersection_c + self.smooth
+            )
+
+            tanimoto_score = 0.5 * (
+                tanimoto + tanimoto_c
+            )
+        else:
+            tanimoto_score = tanimoto
+
+        loss = 1.0 - tanimoto_score
+
+        # 类别有效性判断
+        valid_pixels = valid_mask.sum(dim=(1, 2))
+
+        prob_sum = (
+            prob * mask
+        ).sum(dim=(2, 3))
+
+        target_sum = (
+            target_one_hot * mask
+        ).sum(dim=(2, 3))
+
+        class_valid = (
+            (valid_pixels > 0).unsqueeze(1)
+            & ((prob_sum + target_sum) > 0)
+        )
+
+        return self._reduce_class_loss(
+            loss,
+            class_valid,
+        )
 
 class CombinedLoss(nn.Module):
     def __init__(self, loss_type=None, loss_weight=None, aux_loss_weights=None,
                  num_classes=2, smooth=1e-5, focal_alpha=0.25, focal_gamma=2.0,
-                 ignore_index=256, reduction='mean'):
+                 ignore_index=256, reduction='mean', include_background=False):
         super(CombinedLoss, self).__init__()
         if loss_type is None:
-            loss_type = ['ce', 'dice', 'focal', 'iou', 'tanimoto']
+            loss_type = ['ce', 'dice', 'focal', 'iou']
         if loss_weight is None:
             loss_weight = [1.0] * len(loss_type)
         self.loss_type = loss_type
@@ -318,16 +572,40 @@ class CombinedLoss(nn.Module):
             "The lengths of loss_type and loss_weight must be consistent."
 
         self.loss_map = nn.ModuleDict({
-            'ce': CrossEntropyLoss(ignore_index=ignore_index, reduction=reduction),
-            'dice': DiceLoss(num_classes=num_classes, smooth=smooth,
-                             ignore_index=ignore_index, reduction=reduction),
-            'focal': FocalLoss(num_classes=num_classes, alpha=focal_alpha,
-                               gamma=focal_gamma, reduction=reduction,
-                               ignore_index=ignore_index),
-            'iou': JaccardLoss(num_classes=num_classes, smooth=smooth,
-                               ignore_index=ignore_index, reduction=reduction),
-            'tanimoto': TanimotoLoss(num_classes=num_classes, smooth=smooth,
-                               ignore_index=ignore_index, reduction=reduction),
+            "ce": CrossEntropyLoss(
+                num_classes=num_classes,
+                ignore_index=ignore_index,
+                reduction=reduction,
+            ),
+            "dice": DiceLoss(
+                num_classes=num_classes,
+                smooth=smooth,
+                ignore_index=ignore_index,
+                reduction=reduction,
+                include_background=include_background,
+            ),
+            "focal": FocalLoss(
+                num_classes=num_classes,
+                alpha=focal_alpha,
+                gamma=focal_gamma,
+                ignore_index=ignore_index,
+                reduction=reduction,
+            ),
+            "iou": JaccardLoss(
+                num_classes=num_classes,
+                smooth=smooth,
+                ignore_index=ignore_index,
+                reduction=reduction,
+                include_background=include_background,
+            ),
+            "tanimoto": TanimotoLoss(
+                num_classes=num_classes,
+                smooth=smooth,
+                ignore_index=ignore_index,
+                reduction=reduction,
+                include_background=False,
+                use_complement=True,
+            ),
         })
 
     def _compute_single_loss(self, input, target):
