@@ -43,6 +43,9 @@ def load_config(config_path, merge_data_config=True, strict_check=True):
     with open(config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
 
+    if 'data' in config:
+        merge_data_config = False
+    
     # 如果有 data_config
     if merge_data_config and 'data_config' in config:
         data_config_path = config['data_config']
