@@ -78,7 +78,7 @@ if __name__=="__main__":
         network, optimizer_type=config.optimizer_type, init_lr=config.lr,
         momentum=config.momentum, weight_decay=config.weight_decay)
     lr_scheduler = get_lr_scheduler(
-        optimizer, scheduler_type='gradual_warm', init_lr=config.lr,
+        optimizer, scheduler_type=config.scheduler_type, init_lr=config.lr,
         warmup_epochs=config.warmup_epochs, total_epochs=config.epochs)
     # criterion = nn.CrossEntropyLoss().to(device)
     criterion = CombinedLoss(config.loss_type, config.loss_weight, aux_loss_weights=config.aux_loss_weights,
