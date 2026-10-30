@@ -54,7 +54,7 @@ class CDTrainEpoch(object):
             loss.backward()
             self.optimizer.step()
 
-            train_losses.update(loss.item())
+            train_losses.update(loss.item(), n=img1.size(0))
             train_bar.set_postfix(
                 loss=f'{train_losses.avg:.4f}',
                 lr=f'{get_lr(self.optimizer):.6f}'
@@ -103,7 +103,7 @@ class CDTrainEpoch(object):
             pred = out[0] if isinstance(out, (list, tuple)) else out
 
             loss = self.criterion(pred, label)
-            val_losses.update(loss.item())
+            val_losses.update(loss.item(), n=img1.size(0))
 
             if self.num_classes == 2:
                 # 二分类：取变化类概率
