@@ -155,7 +155,7 @@ class CDInference(object):
                 for k, v in metrics.items():
                     f.write(f"{k}: {v:.6f}\n")
 
-        print(f"\nMetrics saved to: {metric_file}")
+            print(f"\nMetrics saved to: {metric_file}")
 
     def save_prediction(self, pred_torch, label=None, img_name=None, draw_color_map=None, confusion_map=True):
         pred = pred_torch.squeeze(0).cpu().numpy()
