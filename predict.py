@@ -40,10 +40,11 @@ class CDInference(object):
         self.color_map = self.data_config.color_map if hasattr(self.data_config, 'color_map') else None
 
         # 保存位置
-        self.output_dir = os.path.join(args.output_dir, self.config.model.name, pyzjr.timestr())
-        self.vis_dir = os.path.join(self.output_dir, 'visualizations')
-        self.binary_dir = os.path.join(self.output_dir, 'binary')
-        pyzjr.multi_makedirs(self.vis_dir, self.binary_dir)
+        if not self.only_index:
+            self.output_dir = os.path.join(args.output_dir, self.config.model.name, pyzjr.timestr())
+            self.vis_dir = os.path.join(self.output_dir, 'visualizations')
+            self.binary_dir = os.path.join(self.output_dir, 'binary')
+            pyzjr.multi_makedirs(self.vis_dir, self.binary_dir)
 
         print(f"Model loading completed, number of categories: {self.num_classes}")
         print(f"Target shape: {self.target_shape}")
@@ -143,15 +144,16 @@ class CDInference(object):
         metrics = self.compute_metrics()
         print("\n===== TorchMetrics Results =====")
         for k, v in metrics.items():
-            print(f"{k}: {v:.6f}")
+            print(f"{k}: {v:.5f}")
 
         # 保存指标到文件
-        metric_file = os.path.join(self.output_dir, "metric_results.txt")
-        with open(metric_file, "w", encoding="utf-8") as f:
-            f.write(f"Prediction dataset: {os.path.join(self.data_config.dataset_path, mode)}, containing {len(dataset)} image pairs")
-            f.write("===== TorchMetrics Results =====\n")
-            for k, v in metrics.items():
-                f.write(f"{k}: {v:.6f}\n")
+        if not self.only_index:
+            metric_file = os.path.join(self.output_dir, "metric_results.txt")
+            with open(metric_file, "w", encoding="utf-8") as f:
+                f.write(f"Prediction dataset: {os.path.join(self.data_config.dataset_path, mode)}, containing {len(dataset)} image pairs")
+                f.write("===== TorchMetrics Results =====\n")
+                for k, v in metrics.items():
+                    f.write(f"{k}: {v:.6f}\n")
 
         print(f"\nMetrics saved to: {metric_file}")
 
@@ -226,9 +228,9 @@ class CDInference(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Change Detection with YAML Config Test')
-    parser.add_argument('--test_config', type=str, default=r'E:\PythonProject\CDLab\weights\LEVIR_CD\BIT\BIT.yaml',
+    parser.add_argument('--test_config', type=str, default=r'E:\PythonProject\CDLab\weights\LEVIR_CD\DCSI_UNet\DCSI_UNet_hazy.yaml',
                         help='path to config file')
-    parser.add_argument('--weight_path', default=r'E:\PythonProject\CDLab\weights\LEVIR_CD\BIT\best_metric_model.pth', type=str,
+    parser.add_argument('--weight_path', default=r'E:\PythonProject\CDLab\weights\LEVIR_CD\DCSI_UNet\best_metric_model.pth', type=str,
                         help='path to models saving')
     parser.add_argument("--output_dir", type=str, default=r'./work_dirs')
     parser.add_argument("--device", type=str, default='cuda:0')
