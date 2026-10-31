@@ -60,9 +60,8 @@ class CLCDataset(BaseDataset):
 
     def __getitem__(self, item):
         img_name = self.image_name_list[item]
-        # normalize to [-1, 1]
-        img1 = self.read_image(os.path.join(self.t1, img_name), to_rgb=True, normalize=True) * 2 - 1
-        img2 = self.read_image(os.path.join(self.t2, img_name), to_rgb=True, normalize=True) * 2 - 1
+        img1 = self.read_image(os.path.join(self.t1, img_name), to_rgb=True, normalize=True)
+        img2 = self.read_image(os.path.join(self.t2, img_name), to_rgb=True, normalize=True)
         image_label = cv2.imread(os.path.join(self.label, img_name))
         rgb_image_label = cv2.cvtColor(image_label, cv2.COLOR_BGR2RGB)
         if self.mode == 'train':
@@ -117,9 +116,8 @@ class CropSCDataset(BaseDataset):
 
     def __getitem__(self, item):
         img_name = self.image_name_list[item]
-        # normalize to [-1, 1]
-        img1 = self.read_image(os.path.join(self.t1, img_name), to_rgb=True, normalize=True) * 2 - 1
-        img2 = self.read_image(os.path.join(self.t2, img_name), to_rgb=True, normalize=True) * 2 - 1
+        img1 = self.read_image(os.path.join(self.t1, img_name), to_rgb=True, normalize=True)
+        img2 = self.read_image(os.path.join(self.t2, img_name), to_rgb=True, normalize=True)
         image_label = cv2.imread(os.path.join(self.label, img_name))
         rgb_image_label = cv2.cvtColor(image_label, cv2.COLOR_BGR2RGB)
         if self.mode == 'train':
