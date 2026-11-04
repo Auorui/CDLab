@@ -7,7 +7,7 @@ from utils import build_dataset, CDTrainEpoch, load_config, save_merged_config, 
 import pyzjr
 from pyzjr.data import loss_weights_dirs, TrainDataloader, EvalDataloader
 from pyzjr.nn import LossHistory, get_optimizer, get_lr_scheduler
-from pyzjr.visualize.printf import redirect_console
+from pyzjr.utils import redirect_console
 
 def parse_args(known=False):
     parser = argparse.ArgumentParser(description='Change Detection with YAML Config Train')
