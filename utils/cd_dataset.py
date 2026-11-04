@@ -51,7 +51,7 @@ class CLCDataset(BaseDataset):
         self.t1 = os.path.join(data_dir, dir_n1)
         self.t2 = os.path.join(data_dir, dir_n2)
         self.label = os.path.join(data_dir, 'label')
-        self.image_name_list = self.SearchFileName(self.t1, ('.png', '.jpg', '.tif'))
+        self.image_name_list = self.get_file_path(self.t1, ('.png', '.jpg', '.tif'))
         self.color_map = color_map
         self.disable_cv2_multithreading()
 
@@ -65,9 +65,9 @@ class CLCDataset(BaseDataset):
         image_label = cv2.imread(os.path.join(self.label, img_name))
         rgb_image_label = cv2.cvtColor(image_label, cv2.COLOR_BGR2RGB)
         if self.mode == 'train':
-            [img1, img2, imglabel] = self.augment([img1, img2, rgb_image_label], self.target_shape, prob=.5)
+            [img1, img2, imglabel] = self.augment([img1, img2, rgb_image_label], self.target_shape, prob=.5, is_labels=[False, False, True])
         else:
-            [img1, img2, imglabel] = self.align([img1, img2, rgb_image_label], self.target_shape)
+            [img1, img2, imglabel] = self.align([img1, img2, rgb_image_label], self.target_shape, is_labels=[False, False, True])
         img1 = torch.from_numpy(self.hwc2chw(img1)).float()
         img2 = torch.from_numpy(self.hwc2chw(img2)).float()
         imglabel = torch.from_numpy(self.process_label(imglabel)).long()
@@ -107,7 +107,7 @@ class CropSCDataset(BaseDataset):
         self.t1 = os.path.join(data_dir, dir_n1)
         self.t2 = os.path.join(data_dir, dir_n2)
         self.label = os.path.join(data_dir, 'label')
-        self.image_name_list = self.SearchFileName(self.t1, ('.png', '.jpg', '.tif'))
+        self.image_name_list = self.get_file_path(self.t1, ('.png', '.jpg', '.tif'))
         self.color_map = color_map
         self.disable_cv2_multithreading()
 
@@ -121,9 +121,9 @@ class CropSCDataset(BaseDataset):
         image_label = cv2.imread(os.path.join(self.label, img_name))
         rgb_image_label = cv2.cvtColor(image_label, cv2.COLOR_BGR2RGB)
         if self.mode == 'train':
-            [img1, img2, imglabel] = self.augment([img1, img2, rgb_image_label], self.target_shape, prob=.5)
+            [img1, img2, imglabel] = self.augment([img1, img2, rgb_image_label], self.target_shape, prob=.5, is_labels=[False, False, True])
         else:
-            [img1, img2, imglabel] = self.align([img1, img2, rgb_image_label], self.target_shape)
+            [img1, img2, imglabel] = self.align([img1, img2, rgb_image_label], self.target_shape, is_labels=[False, False, True])
         img1 = torch.from_numpy(self.hwc2chw(img1)).float()
         img2 = torch.from_numpy(self.hwc2chw(img2)).float()
         imglabel = torch.from_numpy(self.process_label(imglabel)).long()
