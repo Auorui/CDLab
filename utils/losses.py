@@ -150,7 +150,6 @@ class _OverlapLossBase(_SegLossBase):
             if self.include_background:
                 class_ids = [0, 1]
             else:
-                # 二分类默认只计算前景
                 class_ids = [1]
         else:
             if self.include_background:
@@ -170,10 +169,7 @@ class _OverlapLossBase(_SegLossBase):
 
         valid_pixels = valid_mask.sum(dim=(1, 2))
 
-        class_valid = (
-            (valid_pixels > 0).unsqueeze(1)
-            & ((prob_sum + target_sum) > 0)
-        )
+        class_valid = ((valid_pixels > 0).unsqueeze(1) & ((prob_sum + target_sum) > 0))
 
         return (
             intersection,
@@ -191,10 +187,7 @@ class _OverlapLossBase(_SegLossBase):
         valid_class_count = \
             class_valid.sum(dim=1).clamp_min(1)
 
-        loss = (
-            class_loss.sum(dim=1)
-            / valid_class_count
-        )
+        loss = (class_loss.sum(dim=1) / valid_class_count)
 
         loss = torch.where(
             class_valid.any(dim=1),
@@ -218,17 +211,10 @@ class CrossEntropyLoss(_SegLossBase):
         reduction="mean",
         ignore_index=256,
     ):
-        super().__init__(
-            num_classes=num_classes,
-            ignore_index=ignore_index,
-            reduction=reduction,
-        )
+        super().__init__(num_classes=num_classes, ignore_index=ignore_index, reduction=reduction)
 
         if weight is not None:
-            weight = torch.as_tensor(
-                weight,
-                dtype=torch.float32,
-            )
+            weight = torch.as_tensor(weight, dtype=torch.float32,)
             if weight.numel() != num_classes:
                 raise ValueError(
                     "weight length must equal num_classes"
@@ -257,10 +243,7 @@ class CrossEntropyLoss(_SegLossBase):
                 reduction="none",
             )
 
-        return self._reduce_pixel_loss(
-            pixel_loss,
-            valid_mask,
-        )
+        return self._reduce_pixel_loss(pixel_loss, valid_mask)
 
 class FocalLoss(_SegLossBase):
     def __init__(
@@ -271,29 +254,16 @@ class FocalLoss(_SegLossBase):
         reduction="mean",
         ignore_index=256,
     ):
-        super().__init__(
-            num_classes=num_classes,
-            ignore_index=ignore_index,
-            reduction=reduction,
-        )
-
+        super().__init__(num_classes=num_classes, ignore_index=ignore_index, reduction=reduction,)
         if gamma < 0:
             raise ValueError("gamma must be >= 0")
 
         self.alpha = alpha
         self.gamma = gamma
 
-    def _get_alpha_factor(
-        self,
-        target_safe,
-        valid_mask,
-        dtype,
-    ):
+    def _get_alpha_factor(self, target_safe, valid_mask, dtype):
         if self.alpha is None:
-            return torch.ones_like(
-                target_safe,
-                dtype=dtype,
-            )
+            return torch.ones_like(target_safe, dtype=dtype)
 
         if isinstance(self.alpha, (int, float)):
             alpha = float(self.alpha)
@@ -335,11 +305,7 @@ class FocalLoss(_SegLossBase):
                 )
 
         else:
-            alpha_vector = torch.as_tensor(
-                self.alpha,
-                dtype=dtype,
-                device=target_safe.device,
-            )
+            alpha_vector = torch.as_tensor(self.alpha, dtype=dtype, device=target_safe.device)
 
             if alpha_vector.numel() != self.num_classes:
                 raise ValueError(
@@ -395,16 +361,9 @@ class DiceLoss(_OverlapLossBase):
 
         denominator = prob_sum + target_sum
 
-        dice = (
-            2.0 * intersection + self.smooth
-        ) / (
-            denominator + self.smooth
-        )
+        dice = (2.0 * intersection + self.smooth) / (denominator + self.smooth)
 
-        return self._reduce_class_loss(
-            1.0 - dice,
-            class_valid,
-        )
+        return self._reduce_class_loss(1.0 - dice, class_valid)
 
 
 class JaccardLoss(_OverlapLossBase):
@@ -415,11 +374,7 @@ class JaccardLoss(_OverlapLossBase):
         # Jaccard 的并集要减掉 intersection
         union = prob_sum + target_sum - intersection
 
-        jaccard = (
-            intersection + self.smooth
-        ) / (
-            union + self.smooth
-        )
+        jaccard = (intersection + self.smooth) / (union + self.smooth)
 
         return self._reduce_class_loss(
             1.0 - jaccard,
@@ -477,57 +432,27 @@ class TanimotoLoss(_OverlapLossBase):
 
         # 注意：这里不要提前 prob = prob * mask
         # 每个统计项单独乘 mask，避免 ignore 区域进入 complement 分支
-        intersection = (
-            prob * target_one_hot * mask
-        ).sum(dim=(2, 3))
+        intersection = (prob * target_one_hot * mask).sum(dim=(2, 3))
 
-        p2 = (
-            prob * prob * mask
-        ).sum(dim=(2, 3))
+        p2 = (prob * prob * mask).sum(dim=(2, 3))
 
-        t2 = (
-            target_one_hot
-            * target_one_hot
-            * mask
-        ).sum(dim=(2, 3))
+        t2 = (target_one_hot * target_one_hot * mask).sum(dim=(2, 3))
 
-        tanimoto = (
-            intersection + self.smooth
-        ) / (
-            p2 + t2 - intersection + self.smooth
-        )
+        tanimoto = (intersection + self.smooth) / (p2 + t2 - intersection + self.smooth)
 
         if self.use_complement:
             prob_complement = 1.0 - prob
             target_complement = 1.0 - target_one_hot
 
-            intersection_c = (
-                prob_complement
-                * target_complement
-                * mask
-            ).sum(dim=(2, 3))
+            intersection_c = (prob_complement * target_complement * mask).sum(dim=(2, 3))
 
-            p2_c = (
-                prob_complement
-                * prob_complement
-                * mask
-            ).sum(dim=(2, 3))
+            p2_c = (prob_complement * prob_complement * mask).sum(dim=(2, 3))
 
-            t2_c = (
-                target_complement
-                * target_complement
-                * mask
-            ).sum(dim=(2, 3))
+            t2_c = (target_complement * target_complement * mask).sum(dim=(2, 3))
 
-            tanimoto_c = (
-                intersection_c + self.smooth
-            ) / (
-                p2_c + t2_c - intersection_c + self.smooth
-            )
+            tanimoto_c = (intersection_c + self.smooth) / (p2_c + t2_c - intersection_c + self.smooth)
 
-            tanimoto_score = 0.5 * (
-                tanimoto + tanimoto_c
-            )
+            tanimoto_score = 0.5 * (tanimoto + tanimoto_c)
         else:
             tanimoto_score = tanimoto
 
@@ -536,28 +461,19 @@ class TanimotoLoss(_OverlapLossBase):
         # 类别有效性判断
         valid_pixels = valid_mask.sum(dim=(1, 2))
 
-        prob_sum = (
-            prob * mask
-        ).sum(dim=(2, 3))
+        prob_sum = (prob * mask).sum(dim=(2, 3))
 
-        target_sum = (
-            target_one_hot * mask
-        ).sum(dim=(2, 3))
+        target_sum = (target_one_hot * mask).sum(dim=(2, 3))
 
-        class_valid = (
-            (valid_pixels > 0).unsqueeze(1)
-            & ((prob_sum + target_sum) > 0)
-        )
+        class_valid = ((valid_pixels > 0).unsqueeze(1) & ((prob_sum + target_sum) > 0))
 
-        return self._reduce_class_loss(
-            loss,
-            class_valid,
-        )
+        return self._reduce_class_loss(loss, class_valid)
+
 
 class CombinedLoss(nn.Module):
     def __init__(self, loss_type=None, loss_weight=None, aux_loss_weights=None,
                  num_classes=2, smooth=1e-5, focal_alpha=0.25, focal_gamma=2.0,
-                 ignore_index=256, reduction='mean', include_background=False):
+                 ignore_index=None, reduction='mean', include_background=False):
         super(CombinedLoss, self).__init__()
         if loss_type is None:
             loss_type = ['ce', 'dice', 'focal', 'iou']
