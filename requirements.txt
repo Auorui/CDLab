@@ -10,4 +10,4 @@ mmcv == 2.0.0
 torchmetrics
 timm
 pytorch_wavelets
-pyzjr == 1.4.21
+pyzjr == 1.4.23
