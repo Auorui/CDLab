@@ -23,8 +23,9 @@ loss_weight: [1.0, ]
 aux_loss_weights: null
 
 epochs: 200
-batch_size: 2
+batch_size: 8
 
 log_dir: './logs'
+monitor_metric: "F1"      # 监控并保存最优模型的指标 (可选: IoU, F1, OA, P, R)
 save_period: 50
-resume_training: null      # 这里是完整的模型检查点路径（包含记忆项）
+resume: null      # 这里是完整的模型检查点路径（包含记忆项）

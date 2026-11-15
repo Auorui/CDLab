@@ -22,5 +22,6 @@ epochs: 200
 batch_size: 8
 
 log_dir: './logs'
+monitor_metric: "F1"      # 监控并保存最优模型的指标 (可选: IoU, F1, OA, P, R)
 save_period: 50           # 每多少epoch保存一次模型
-resume_training: null     # 恢复训练的checkpoint路径，如 './checkpoints/last.pth'
+resume: null     # 恢复训练的checkpoint路径，如 './checkpoints/last.pth'
