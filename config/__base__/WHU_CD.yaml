@@ -4,7 +4,11 @@ data:
   num_classes: 2
   dir_n1: 'im1'
   dir_n2: 'im2'
+  dir_label: 'label'
+  label_threshold: 127
+  ignore_index: 256
+  val_mode: 'resize_pad'  # center_crop or resize_pad
   color_map: {
-    'NotChanged': [0, 0, 0],  # label 0   (rgb)
-    'Changed': [ 255, 255, 255 ],  # label 1   (rgb)
+    '0': [0, 0, 0],  # label 0   (rgb)
+    '1': [ 255, 255, 255 ],  # label 1   (rgb)
   }

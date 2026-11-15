@@ -4,6 +4,10 @@ data:
   num_classes: 9
   dir_n1: 'im1'
   dir_n2: 'im2'
+  dir_label: 'label'
+  label_threshold: 127
+  ignore_index: 256
+  val_mode: 'center_crop'  # center_crop or resize_pad
   color_map: null
 #            {
 #      0: [255, 255, 255],       # No Cropland Change
