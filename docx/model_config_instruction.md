@@ -39,6 +39,7 @@ epochs: 200
 batch_size: 2
 
 log_dir: './logs'
+monitor_metric: 'F1'
 save_period: 50
 resume_training: null
 ```
