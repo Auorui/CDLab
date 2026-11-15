@@ -23,11 +23,15 @@ data:
   # directory names for t1 and t2 images
   dir_n1: 'image1'
   dir_n2: 'image2'
+  dir_label: 'label'
+  label_threshold: 127
+  ignore_index: 256
+  val_mode: 'center_crop'  # center_crop or resize_pad
 
   # label mapping (RGB → class index)
   color_map:
-    NotChanged: [0, 0, 0]        # label = 0
-    Changed: [255, 255, 255]     # label = 1  ⚠️ MUST be 1
+    0: [0, 0, 0]        # label = 0
+    1: [255, 255, 255]     # label = 1  ⚠️ MUST be 1
 ```
 
 ---
@@ -60,10 +64,6 @@ For **binary change detection**, the label mapping must follow:
 * The Dice Loss is computed **only on the foreground class**
 * The implementation assumes:
 
-```python
-prob_fg = prob[:, 1, :, :]
-```
-
 👉 If your dataset uses a different convention (e.g., Changed = 0),
 you **must remap the labels** before training.
 
@@ -79,7 +79,10 @@ data:
 
   dir_n1: 'im1'
   dir_n2: 'im2'
-
+  dir_label: 'label'
+  label_threshold: 127
+  ignore_index: 256
+  val_mode: 'center_crop'  # center_crop or resize_pad
   color_map: null
 #            {   The dataset has already been processed, so no mapping is required.
 #      0: [255, 255, 255],       # No Cropland Change   
