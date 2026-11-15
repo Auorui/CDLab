@@ -23,7 +23,7 @@ if __name__=="__main__":
     args = parse_args()
     config = load_config(args.config)
     pyzjr.SeedEvery(args.seed)
-    loss_log_dir, save_model_dir, timelog_dir = loss_weights_dirs(config.log_dir)
+    loss_log_dir, save_model_dir, timelog_dir = loss_weights_dirs(os.path.join(config.log_dir, config.model.name))
     redirect_console(os.path.join(timelog_dir, 'out.log'))
     pyzjr.show_config(args=args, yaml_path=args.config)
     save_merged_config(config, timelog_dir)
@@ -32,7 +32,6 @@ if __name__=="__main__":
         device = torch.device(f'cuda:{gpu_ids[0]}')
     else:
         device = torch.device('cpu')
-    print(f"Using the device: {device}")
 
     # selection model
     model_cfg = config.model
@@ -43,27 +42,8 @@ if __name__=="__main__":
         print(f"Using multi-card training: GPU {gpu_ids}")
         network = torch.nn.DataParallel(network, device_ids=gpu_ids)
     else:
-        print(f"Training with a single GPU: GPU {device}")
-    if config.resume_training is not None:
-        print(f"Weights {config.resume_training} loaded into {model_cfg.name}")
-        if torch.cuda.is_available():
-            checkpoint = torch.load(config.resume_training, map_location=device, weights_only=True)
-        else:
-            checkpoint = torch.load(config.resume_training, map_location='cpu', weights_only=True)
-        target_model = network.module if isinstance(network, torch.nn.DataParallel) else network
-        model_dict = target_model.state_dict()
-        filtered, skipped = {}, []
-        for k, v in checkpoint.items():
-            if k in model_dict and v.shape == model_dict[k].shape:
-                filtered[k] = v
-            else:
-                skipped.append(k)
-        model_dict.update(filtered)
-        target_model.load_state_dict(model_dict)
-        print(f"Loaded: {len(filtered)} / {len(checkpoint)} layers")
-        if skipped:
-            print(f"  Skipped (shape mismatch or not found): {skipped}")
-    else:
+        print(f"Training with a single GPU: {device}")
+    if config.resume is None:
         print(f"Initial training {model_cfg.name}")
 
     # load data
@@ -84,24 +64,11 @@ if __name__=="__main__":
     criterion = CombinedLoss(config.loss_type, config.loss_weight, aux_loss_weights=config.aux_loss_weights,
                              num_classes=config.data.num_classes).to(device)
     cd_trainer = CDTrainEpoch(
-        network, model_cfg.name, config.epochs, optimizer, criterion, num_classes=config.data.num_classes
+        network, model_cfg.name, config.epochs, optimizer, lr_scheduler, criterion,
+        num_classes=config.data.num_classes, resume=config.resume, device=device,
+        ignore_index=config.data.ignore_index
     )
-    for epoch in range(config.epochs):
-        epoch = epoch + 1
-        train_loss = cd_trainer.train_one_epoch(train_loader, epoch)
-        val_loss, f1_score = cd_trainer.evaluate(val_loader, epoch)
-        loss_history.append_loss(epoch, train_loss, val_loss)
-
-        lr_scheduler.step()
-
-        print('Epoch:' + str(epoch) + '/' + str(config.epochs))
-        print('Total Loss: %.5f || Val Loss: %.5f ' % (train_loss, val_loss))
-
-        pyzjr.SaveModelPth(
-            network,
-            save_dir=save_model_dir,
-            metric=f1_score,
-            epoch=epoch,
-            total_epochs=config.epochs,
-            save_period=config.save_period
-        )
+    cd_trainer.fit(
+        train_loader, val_loader, save_model_dir, loss_history=loss_history,
+        save_period=config.save_period, monitor_metric=config.monitor_metric
+    )
