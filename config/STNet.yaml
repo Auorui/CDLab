@@ -23,7 +23,7 @@ loss_weight: [0.5, 0.5]
 aux_loss_weights: null
 
 epochs: 200
-batch_size: 2
+batch_size: 8
 
 log_dir: './logs'
 monitor_metric: "F1"      # 监控并保存最优模型的指标 (可选: IoU, F1, OA, P, R)
